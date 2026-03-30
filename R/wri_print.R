@@ -14,7 +14,7 @@
 }
 
 #' @export
-print.wri_catalog <- function(x, ...) {
+print.wri_overview <- function(x, ...) {
 
   cat("WRI DATA SUMMARY\n")
   cat("-------------------\n")

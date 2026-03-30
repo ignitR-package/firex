@@ -21,12 +21,14 @@ wri_overview <- function(fresh = TRUE) {
   }
 
   data <- wri_read_stac_tree()
+  wri_df <- wri_items_df(data)
 
   structure(
     list(
       path = data$catalog_path,
       built_at = Sys.time(),
-      data = data
+      data = data,
+      wri_df = wri_df
     ),
     class = "wri_overview"
   )

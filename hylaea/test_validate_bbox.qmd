@@ -1,0 +1,31 @@
+---
+title: "test"
+format: html
+---
+
+```{r}
+library(here)
+```
+
+```{r}
+source(here("R/validate_bbox.R"))
+```
+
+## Valid bbox values test
+```{r}
+is_valid_bbox(c(-122, 37, -121, 38))
+```
+
+## Invalid bbox values test
+```{r}
+is_valid_bbox(c("-122", "37", "-121", "38"))
+```
+
+
+```{r}
+# [2]> [4]
+is_valid_bbox(c(-122, 38, -121, 37))
+```
+
+
+

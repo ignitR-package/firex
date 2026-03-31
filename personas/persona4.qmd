@@ -1,0 +1,46 @@
+---
+title: "persona4"
+format: html
+---
+
+```{r}
+library(terra)
+library(sf)
+library(here)
+source(here::here("R","persona4.R"))
+source(here("R", "validate_bbox.R"))
+```
+
+
+```{r}
+# See everything
+browse_places()
+
+```
+```{r}
+# Replace "Plumas" with any part of your county or state name
+browse_places("santa")
+```
+
+```{r}
+my_data <- get_wri_for_place("Santa Barbara County, CA")
+```
+```{r}
+terra::plot(my_data)
+```
+
+```{r}
+is_valid_bbox(c(-119.869862,34.419399,-119.845808,34.408950))
+```
+```{r}
+is_valid_bbox(c(-124.41060660766607,32.5342307609976,-114.13445790587905,42.00965914828148))
+```
+
+```{r}
+validate_bbox(c(-119.869862,34.419399,-119.845808,34.408950))
+```
+
+```{r}
+dplyr::is_grouped_df() 
+```
+

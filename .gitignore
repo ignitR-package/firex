@@ -9,4 +9,4 @@
 .vscode/
 
 R/explore.R
-R/list_layer.R
+R/list_layers.R

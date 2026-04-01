@@ -7,3 +7,6 @@
 
 # vs code settings
 .vscode/
+
+R/explore.R
+R/list_layer.R

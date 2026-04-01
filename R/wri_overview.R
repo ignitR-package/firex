@@ -33,3 +33,4 @@ wri_overview <- function(fresh = TRUE) {
     class = "wri_overview"
   )
 }
+

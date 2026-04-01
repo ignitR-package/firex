@@ -1,17 +1,6 @@
 # =============================================================================
-# S3 method: printing wri_catalog objects (summary view)
+# S3 method: printing wri_overview objects (summary view)
 # =============================================================================
-
-`%||%` <- function(a, b) if (!is.null(a)) a else b
-
-# Internal helper: safely pull a scalar property from a STAC item
-.wri_prop1 <- function(item_obj, key) {
-  p <- item_obj$properties
-  if (is.null(p)) return(NA_character_)
-  val <- p[[key]]
-  if (is.null(val) || length(val) == 0) return(NA_character_)
-  as.character(val[[1]])
-}
 
 #' @export
 print.wri_overview <- function(x, ...) {

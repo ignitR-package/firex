@@ -15,3 +15,4 @@ wri_overview_df <- function(fresh = TRUE) {
   x <- wri_overview(fresh = fresh)
   x$wri_df
 }
+

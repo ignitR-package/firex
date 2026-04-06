@@ -335,8 +335,7 @@ wri_items_df <- function(data) {
 
     if (is.null(assets) || nrow(assets) == 0) {
       return(data.frame(
-        stac_index = i,
-        item_order_in_collection = item_wrapper$item_order_in_collection %||% NA_integer_,
+
         id = item_wrapper$id,
         collection = item_wrapper$collection,
         item_path = item_wrapper$item_path,
@@ -358,11 +357,10 @@ wri_items_df <- function(data) {
     }
 
     data.frame(
-      stac_index = i,
-      item_order_in_collection = item_wrapper$item_order_in_collection %||% NA_integer_,
+
       id = item_wrapper$id,
       collection = item_wrapper$collection,
-      item_path = item_wrapper$item_path,
+      # item_path = item_wrapper$item_path, enable if data is ever stored locally
       asset_name = assets$asset_name,
       asset_href = assets$href,
       asset_type = assets$type,

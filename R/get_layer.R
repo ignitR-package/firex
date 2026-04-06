@@ -1,4 +1,4 @@
-#' Title
+#' get_layer
 #'
 #' @param id
 #' @param bbox

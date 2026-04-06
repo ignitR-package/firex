@@ -44,5 +44,4 @@ print.wri_overview <- function(x, ...) {
   item_ids <- names(x$data$items)
   cat("Items: ", length(item_ids), "\n", sep = "")
 
-  invisible(x)
 }

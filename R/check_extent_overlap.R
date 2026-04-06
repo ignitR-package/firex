@@ -5,11 +5,11 @@
 #' stops or warns with a description of how much of the region is out of
 #' bounds.
 #'
-#' @param region sf. The region of interest as an \code{sf} polygon in
+#' @param bbox sf. The region of interest as an \code{sf} polygon in
 #' EPSG:4326. Should already be validated and normalized before passing.
 #' @param layer_id character. One or more layer IDs to check extent against.
 #'
-#' @return Invisibly returns \code{region} if fully within extent. Warns or
+#' @return Invisibly returns \code{bbox} if fully within extent. Warns or
 #' stops otherwise.
 #'
 #' @details Overlap outcomes:
@@ -23,7 +23,7 @@
 #' }
 #'
 #' @Keywords internal
-check_extent_overlap <- function(region, layer_id) {
+check_extent_overlap <- function(bbox, layer_id) {
 
     # if bbox, validate bounding box with validate_bbox()
     if (!is.null(bbox)) {

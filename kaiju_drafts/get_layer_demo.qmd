@@ -1,9 +1,0 @@
----
-title: "get_layer_demo"
-format: html
----
-
-```{r, wri_overview() demo}
-wri_overview()
-```
-

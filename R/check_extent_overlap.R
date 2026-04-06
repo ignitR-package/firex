@@ -1,58 +1,160 @@
-#' Check overlap between a region and WRI layer extent
+#' Check whether a bounding box falls within a layer extent
 #'
-#' Checks whether a region of interest falls within the extent of the
-#' requested WRI layers. If the region partially or fully falls outside,
-#' stops or warns with a description of how much of the region is out of
-#' bounds.
+#' Checks whether a requested bounding box is fully contained within the
+#' extent of a STAC layer.
 #'
-#' @param bbox sf. The region of interest as an \code{sf} polygon in
-#' EPSG:4326. Should already be validated and normalized before passing.
-#' @param layer_id character. One or more layer IDs to check extent against.
+#' @param bbox Numeric vector in the form \code{c(xmin, ymin, xmax, ymax)}
+#'   in EPSG:4326.
+#' @param layer_id Character. A single layer ID to check against.
 #'
-#' @return Invisibly returns \code{bbox} if fully within extent. Warns or
-#' stops otherwise.
+#' @return A length-1 logical. Returns \code{TRUE} when \code{bbox} is fully
+#'   contained within the requested layer extent and \code{FALSE} otherwise.
+#'   The return value carries a \code{"message"} attribute that can be read
+#'   later with \code{attr(result, "message")}.
 #'
 #' @details Overlap outcomes:
 #' \itemize{
-#' \item Full overlap — passes silently
-#' \item Partial overlap — warns with the percentage of the region
-#' that falls outside the layer extent, then proceeds with the
-#' intersecting portion
-#' \item No overlap — stops with the distance to the nearest edge of
-#' the layer extent, so the user knows how far off they are
+#' \item Full overlap - returns \code{TRUE}
+#' \item Partial overlap - returns \code{FALSE} with a message describing
+#'   which side of the layer extent the bbox exceeds
+#' \item No overlap - returns \code{FALSE} with a message that the bbox does
+#'   not overlap the layer extent
 #' }
 #'
-#' @Keywords internal
+#' @keywords internal
 check_extent_overlap <- function(bbox, layer_id) {
+  make_result <- function(value, message = NULL) {
+    structure(as.logical(value), message = message)
+  }
 
-    # if bbox, validate bounding box with validate_bbox()
-    if (!is.null(bbox)) {
-        check <- is_valid_bbox(bbox)
-        # isTRUE() returns true only for TRUE values and false otherwise
-        if (!isTRUE(check)) return(paste0(("Invalid bounding box: ", check))
-    }
+  if (missing(layer_id) || is.null(layer_id) || length(layer_id) != 1L || !nzchar(layer_id)) {
+    return(make_result(FALSE, "A single layer_id is required."))
+  }
 
-    # Find layer extent from STAC
-    stac_file <- system.file(
-        "extdata/stac/collections/wri_ignitR/items",
-        paste0(layer_id, ".json"),
-        package = "firex"
+  bbox_check <- is_valid_bbox(bbox)
+  if (!isTRUE(bbox_check)) {
+    return(make_result(FALSE, paste0("Invalid bounding box: ", bbox_check)))
+  }
+
+  layer_bbox <- .get_layer_bbox(layer_id)
+  if (is.null(layer_bbox)) {
+    return(make_result(FALSE, paste0("Layer '", layer_id, "' not found in the STAC catalog.")))
+  }
+
+  is_within_extent <- bbox[1] >= layer_bbox[1] &&
+    bbox[2] >= layer_bbox[2] &&
+    bbox[3] <= layer_bbox[3] &&
+    bbox[4] <= layer_bbox[4]
+
+  if (is_within_extent) {
+    return(make_result(TRUE))
+  }
+
+  has_overlap <- bbox[1] < layer_bbox[3] &&
+    bbox[3] > layer_bbox[1] &&
+    bbox[2] < layer_bbox[4] &&
+    bbox[4] > layer_bbox[2]
+
+  outside_sides <- c(
+    left = bbox[1] < layer_bbox[1],
+    bottom = bbox[2] < layer_bbox[2],
+    right = bbox[3] > layer_bbox[3],
+    top = bbox[4] > layer_bbox[4]
+  )
+
+  if (has_overlap) {
+    side_text <- paste(names(outside_sides)[outside_sides], collapse = ", ")
+    message <- paste0(
+      "Requested bbox extends outside layer '", layer_id,
+      "' extent on the ", side_text, "."
     )
 
-    # Return error message if layer not found in STAC
-    if (stac_file == "") return(paste0("Layer '", layer_id, "' not found."))
-    
-    # Layer extent in EPSG:4326 format: c(xmin, ymin, xmax, ymax)
-    ext <- jsonlite::read_json(stac_file)$bbox
+    return(make_result(FALSE, message))
+  }
 
-    # Check if bbox matches layer extent
-    x_overlap <- region[1] < ext[[3]] && bbox[3] > ext[[1]]
-    y_overlap <- region[2] < ext[[4]] && bbox[4] > ext[[2]]
+  make_result(
+    FALSE,
+    paste0("Requested bbox does not overlap layer '", layer_id, "' extent.")
+  )
+}
 
-    if (!x_overlap || !y_overlap) {
-        return(paste0("Region is not contained within the extent of layer '", layer_id, "'."))
+.get_layer_bbox <- function(layer_id) {
+  layer_bbox <- .get_layer_bbox_from_loaded_items(layer_id)
+  if (!is.null(layer_bbox)) {
+    return(layer_bbox)
+  }
+
+  stac_dirs <- .get_stac_item_dirs()
+  if (length(stac_dirs) == 0) {
+    return(NULL)
+  }
+
+  for (stac_dir in stac_dirs) {
+    stac_file <- file.path(stac_dir, paste0(layer_id, ".json"))
+
+    if (!file.exists(stac_file)) {
+      next
     }
 
-    return(TRUE)
+    item <- jsonlite::read_json(stac_file)
+    layer_bbox <- as.numeric(unlist(item$bbox, use.names = FALSE))
 
+    if (length(layer_bbox) == 4L) {
+      return(layer_bbox)
+    }
+  }
+
+  NULL
+}
+
+.get_layer_bbox_from_loaded_items <- function(layer_id) {
+  if (!exists("load_stac_items", mode = "function", inherits = TRUE)) {
+    return(NULL)
+  }
+
+  items <- tryCatch(load_stac_items(), error = function(e) NULL)
+  if (is.null(items) || length(items) == 0) {
+    return(NULL)
+  }
+
+  for (item in items) {
+    if (identical(item$id, layer_id)) {
+      layer_bbox <- as.numeric(unlist(item$bbox, use.names = FALSE))
+
+      if (length(layer_bbox) == 4L) {
+        return(layer_bbox)
+      }
+    }
+  }
+
+  NULL
+}
+
+.get_stac_item_dirs <- function() {
+  stac_dirs <- character(0)
+
+  if (exists("get_stac_catalog_path", mode = "function", inherits = TRUE)) {
+    kaiju_dir <- tryCatch(get_stac_catalog_path(), error = function(e) "")
+
+    if (is.character(kaiju_dir) && length(kaiju_dir) == 1L && nzchar(kaiju_dir)) {
+      stac_dirs <- c(stac_dirs, kaiju_dir)
+    }
+  }
+
+  installed_dir <- system.file(
+    "extdata",
+    "stac",
+    "collections",
+    "wri_ignitR",
+    "items",
+    package = "firex"
+  )
+
+  stac_dirs <- c(
+    stac_dirs,
+    installed_dir,
+    file.path("inst", "extdata", "stac", "collections", "wri_ignitR", "items")
+  )
+
+  unique(stac_dirs[nzchar(stac_dirs)])
 }

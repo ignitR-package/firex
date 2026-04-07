@@ -26,11 +26,11 @@ test_that("get_layer validates inputs before attempting retrieval", {
   expect_error(
     get_layer(id = "WRI_score", bbox = c(-122, 37, -121)),
     fixed = TRUE,
-    "`bbox` must be numeric: c(xmin, ymin, xmax, ymax)."
+    "`bbox` must contain four numeric values: c(xmin, ymin, xmax, ymax)."
   )
   expect_error(
     get_layer(id = "WRI_score", bbox = c(-100, 50, -120, 30)),
     fixed = TRUE,
-    "`bbox` xmin must be less than xmax."
+    "You supplied bbox = c(xmin = -100, ymin = 50, xmax = -120, ymax = 30). `xmin` must be less than `xmax`."
   )
 })

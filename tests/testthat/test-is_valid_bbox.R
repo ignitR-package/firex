@@ -1,5 +1,8 @@
 test_that("is_valid_bbox accepts valid bounding boxes", {
-  expect_true(is_valid_bbox(c(-120, 30, -100, 50)))
+  result <- is_valid_bbox(c(-120, 30, -100, 50))
+  expect_true(isTRUE(result))
+  expect_equal(attr(result, "status"), "valid")
+  expect_equal(attr(result, "bbox"), c(-120, 30, -100, 50))
   expect_true(is_valid_bbox(c(-180, -90, 180, 90)))  # Global bbox
   expect_true(is_valid_bbox(c(0, 0, 10, 10)))
 })

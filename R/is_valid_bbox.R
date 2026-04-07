@@ -17,11 +17,24 @@
 #'
 is_valid_bbox <- function(bbox, crs = "EPSG:4326") {
 
+  format_bbox <- function(x) {
+    paste0(
+      "You supplied bbox = c(",
+      "xmin = ", x[1], ", ",
+      "ymin = ", x[2], ", ",
+      "xmax = ", x[3], ", ",
+      "ymax = ", x[4], "). "
+    )
+  }
+
   # Validate basic bbox format and value types
   if (!is.numeric(bbox) || length(bbox) != 4L) {
     return(.make_result(
       FALSE,
-      message = "`bbox` must be numeric: c(xmin, ymin, xmax, ymax).",
+      message = paste(
+        "`bbox` must contain four numeric values:",
+        "c(xmin, ymin, xmax, ymax)."
+      ),
       status = "invalid"
     ))
   }
@@ -70,21 +83,48 @@ is_valid_bbox <- function(bbox, crs = "EPSG:4326") {
   ymin <- bbox[2]
   xmax <- bbox[3]
   ymax <- bbox[4]
+  bbox_label <- format_bbox(bbox)
 
   if (xmin >= xmax) {
-    return(.make_result(FALSE, "`bbox` xmin must be less than xmax.", "invalid", bbox))
+    return(.make_result(
+      FALSE,
+      paste0(bbox_label, "`xmin` must be less than `xmax`."),
+      "invalid",
+      bbox
+    ))
   }
 
   if (ymin >= ymax) {
-    return(.make_result(FALSE, "`bbox` ymin must be less than ymax.", "invalid", bbox))
+    return(.make_result(
+      FALSE,
+      paste0(bbox_label, "`ymin` must be less than `ymax`."),
+      "invalid",
+      bbox
+    ))
   }
 
   if (xmin < -180 || xmax > 180) {
-    return(.make_result(FALSE, "`bbox` longitude values must be between -180 and 180.", "invalid", bbox))
+    return(.make_result(
+      FALSE,
+      paste0(
+        bbox_label,
+        "`xmin` and `xmax` must be between -180 and 180."
+      ),
+      "invalid",
+      bbox
+    ))
   }
 
   if (ymin < -90 || ymax > 90) {
-    return(.make_result(FALSE, "`bbox` latitude values must be between -90 and 90.", "invalid", bbox))
+    return(.make_result(
+      FALSE,
+      paste0(
+        bbox_label,
+        "`ymin` and `ymax` must be between -90 and 90."
+      ),
+      "invalid",
+      bbox
+    ))
   }
 
   .make_result(TRUE, status = "valid", bbox = bbox)

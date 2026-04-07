@@ -2,35 +2,28 @@
 % Please edit documentation in R/get_layer.R
 \name{get_layer}
 \alias{get_layer}
-\title{Retrieve a WRI layer as raster}
+\title{Get a WRI raster layer}
 \usage{
-get_layer(id, bbox = NULL)
+get_layer(id, bbox = NULL, crs = "EPSG:4326")
 }
 \arguments{
-\item{id}{Character. Layer name (without .tif extension). Use \code{list_layers()}
-to see available layers.}
+\item{id}{Character. Layer id to retrieve.}
 
-\item{bbox}{Numeric vector of length 4, optional. Bounding box as c(xmin, ymin, xmax, ymax)
-in EPSG:4326 (longitude/latitude). If NULL, returns the full raster.}
+\item{bbox}{Numeric vector \code{c(xmin, ymin, xmax, ymax)} in the supplied
+\code{crs}. If \code{NULL}, returns the full layer.}
+
+\item{crs}{Character. Coordinate reference system of \code{bbox}. Defaults to
+\code{"EPSG:4326"}.}
 }
 \value{
-A terra SpatRaster object, optionally cropped to the bounding box
+A \code{terra::SpatRaster}.
 }
 \description{
-Download and optionally crop a WRI layer to a bounding box. For hosted layers,
-this uses COG streaming to fetch only the requested spatial subset.
+Get a WRI raster layer
 }
 \examples{
-# Get the full WRI score layer
-wri_full <- get_layer("WRI_score")
-terra::plot(wri_full)
-
-# Get WRI score for northern California
-bbox_norcal <- c(-122, 37, -121, 38)
-wri_norcal <- get_layer("WRI_score", bbox = bbox_norcal)
-terra::plot(wri_norcal)
-
-# Get an air quality resistance indicator
-asthma <- get_layer("air_quality_resistance_asthma", bbox = bbox_norcal)
-terra::plot(asthma)
+\dontrun{
+bbox <- c(-122, 37, -121, 38)
+rast <- get_layer("WRI_score", bbox = bbox)
+}
 }

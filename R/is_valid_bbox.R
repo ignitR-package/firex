@@ -1,51 +1,86 @@
 #' Check if a bounding box is valid
 #'
-#' Tests whether a bounding box vector meets all validation criteria.
-#' This is an internal helper function used by \code{get_tif()}.
-#'
 #' @param bbox numeric vector. Expected format: \code{c(xmin, ymin, xmax, ymax)}
-#'   in EPSG:4326.
+#'   in the supplied \code{crs}.
+#' @param crs character. Coordinate reference system of the bounding box.
+#'   Default is \code{"EPSG:4326"}.
 #'
-#' @return Logical. \code{TRUE} if the bounding box is valid, \code{FALSE} otherwise.
-#'
-#' @details Validation checks:
-#'   \itemize{
-#'     \item Must be numeric
-#'     \item Must be length 4
-#'     \item \code{xmin} must be less than \code{xmax}
-#'     \item \code{ymin} must be less than \code{ymax}
-#'     \item Longitude values must be between -180 and 180
-#'     \item Latitude values must be between -90 and 90
-#'   }
-#'
-#' @keywords internal
-#' @seealso Used by: \code{get_tif()}
+#' @return A length-1 logical with \code{"status"}, \code{"message"}, and
+#'   \code{"bbox"} attributes. On success, the \code{"bbox"} attribute contains
+#'   the validated bounding box in EPSG:4326.
 #'
 #' @examples
-#' \dontrun{
-#' is_valid_bbox(c(-120, 30, -100, 50))  # TRUE
-#' is_valid_bbox(c(-100, 30, -120, 50))  # FALSE - xmin > xmax
-#' }
-is_valid_bbox <- function(bbox) {
-  # Check if numeric
-  if (!is.numeric(bbox)) return(FALSE)
+#' is_valid_bbox(c(-120, 34, -119, 35))  # TRUE
+#' is_valid_bbox(c(-119, 34, -120, 35))  # FALSE
+#'
+#' @export
+#'
+is_valid_bbox <- function(bbox, crs = "EPSG:4326") {
 
-  # Check if length 4
-  if (length(bbox) != 4) return(FALSE)
+  if (!is.numeric(bbox) || length(bbox) != 4L) {
+    return(.make_result(
+      FALSE,
+      message = "`bbox` must be numeric: c(xmin, ymin, xmax, ymax).",
+      status = "invalid"
+    ))
+  }
+
+  bbox <- as.numeric(bbox)
+
+  if (!identical(toupper(crs), "EPSG:4326")) {
+    bbox_poly <- tryCatch(
+      terra::as.polygons(
+        terra::ext(bbox[1], bbox[3], bbox[2], bbox[4]),
+        crs = crs
+      ),
+      error = function(e) NULL
+    )
+
+    if (is.null(bbox_poly)) {
+      return(.make_result(
+        FALSE,
+        message = paste0("Could not interpret bbox with CRS '", crs, "'."),
+        status = "invalid"
+      ))
+    }
+
+    bbox_poly <- tryCatch(
+      terra::project(bbox_poly, "EPSG:4326"),
+      error = function(e) NULL
+    )
+
+    if (is.null(bbox_poly)) {
+      return(.make_result(
+        FALSE,
+        message = paste0("Could not transform bbox from '", crs, "' to 'EPSG:4326'."),
+        status = "invalid"
+      ))
+    }
+
+    bbox_ext <- terra::ext(bbox_poly)
+    bbox <- c(bbox_ext$xmin, bbox_ext$ymin, bbox_ext$xmax, bbox_ext$ymax)
+  }
 
   xmin <- bbox[1]
   ymin <- bbox[2]
   xmax <- bbox[3]
   ymax <- bbox[4]
 
-  # Check coordinate ordering
-  if (xmin >= xmax || ymin >= ymax) return(FALSE)
+  if (xmin >= xmax) {
+    return(.make_result(FALSE, "`bbox` xmin must be less than xmax.", "invalid", bbox))
+  }
 
-  # Check longitude range (-180 to 180)
-  if (xmin < -180 || xmax > 180) return(FALSE)
+  if (ymin >= ymax) {
+    return(.make_result(FALSE, "`bbox` ymin must be less than ymax.", "invalid", bbox))
+  }
 
-  # Check latitude range (-90 to 90)
-  if (ymin < -90 || ymax > 90) return(FALSE)
+  if (xmin < -180 || xmax > 180) {
+    return(.make_result(FALSE, "`bbox` longitude values must be between -180 and 180.", "invalid", bbox))
+  }
 
-  return(TRUE)
+  if (ymin < -90 || ymax > 90) {
+    return(.make_result(FALSE, "`bbox` latitude values must be between -90 and 90.", "invalid", bbox))
+  }
+
+  .make_result(TRUE, status = "valid", bbox = bbox)
 }

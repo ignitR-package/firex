@@ -72,33 +72,53 @@ wri_get_pkg_path <- function() {
 
 wri_resolve_stac_path <- function() {
 
-  pkg_path <- wri_get_pkg_path()
-
-  project_root <- normalizePath(
-    file.path(pkg_path, ".."),
-    winslash = "/",
-    mustWork = FALSE
+  pkg_path <- tryCatch(
+    wri_get_pkg_path(),
+    error = function(e) NA_character_
   )
 
-  stac_path <- normalizePath(
-    file.path(project_root, "wri-data-processing", "stac", "catalog.json"),
-    winslash = "/",
-    mustWork = FALSE
-  )
+  # First look for a catalog in the package's inst/extdata/stac/ directory (dev mode)
+  dev_stac_path <- if (!is.na(pkg_path) && nzchar(pkg_path)) {
+    normalizePath(
+      file.path(pkg_path, "inst", "extdata", "stac", "catalog.json"),
+      winslash = "/",
+      mustWork = FALSE
+    )
+  } else {
+    NA_character_
+  }
 
-  if (!file.exists(stac_path)) {
+  installed_stac_path <- system.file("extdata", "stac", "catalog.json", package = "firex")
+
+  if (!is.na(dev_stac_path) && file.exists(dev_stac_path)) {
+    return(dev_stac_path)
+  }
+
+  if (nzchar(installed_stac_path) && file.exists(installed_stac_path)) {
+    return(normalizePath(installed_stac_path, winslash = "/", mustWork = TRUE))
+  }
+
+  dev_label <- if (!is.na(dev_stac_path) && nzchar(dev_stac_path)) {
+    dev_stac_path
+  } else {
+    "<package root could not be resolved>"
+  }
+
+  installed_label <- if (nzchar(installed_stac_path)) {
+    normalizePath(installed_stac_path, winslash = "/", mustWork = FALSE)
+    } else {
+      "<installed package extdata/stac/catalog.json not found>"
+    }
+
     stop(
       "STAC catalog not found.\n\n",
-      "I looked for:\n  ", stac_path, "\n\n",
-      "Expected layout:\n",
-      "  <project_root>/firex/\n",
-      "  <project_root>/wri-data-processing/stac/catalog.json\n",
+      "I looked for:\n  ", dev_label, "\n ", installed_label, "\n\n",
+      "Expected locations:\n",
+      "  <pkg_root>/inst/extdata/stac/catalog.json\n",
+      "  <installed firex>/extdata/stac/catalog.json\n",
       call. = FALSE
     )
   }
-
-  stac_path
-}
 
 # -----------------------------------------------------------------------------
 # RESOLVE HREF (RELATIVE / ABSOLUTE / URL)

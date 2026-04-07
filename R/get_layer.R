@@ -1,24 +1,32 @@
-#' get_layer
+#' Get a WRI raster layer
 #'
-#' @param id
-#' @param bbox
+#' @param id Character. Layer id to retrieve.
+#' @param bbox Numeric vector `c(xmin, ymin, xmax, ymax)` in the supplied
+#'   `crs`. If `NULL`, returns the full layer.
+#' @param crs Character. Coordinate reference system of `bbox`. Defaults to
+#'   `"EPSG:4326"`.
 #'
-#' @returns
+#' @returns A `terra::SpatRaster`.
 #' @export
 #'
 #' @examples
-
-get_layer <- function(id, bbox = NULL) {
-
-  # Validate inputs
+#' \dontrun{
+#' bbox <- c(-122, 37, -121, 38)
+#' rast <- get_layer("WRI_score", bbox = bbox)
+#' }
+get_layer <- function(id, bbox = NULL, crs = "EPSG:4326") {
   if (missing(id) || !is.character(id) || length(id) != 1 || !nzchar(id)) {
     stop("`id` must be a single non-empty character string.", call. = FALSE)
   }
 
   if (!is.null(bbox)) {
-    if (!is.numeric(bbox) || length(bbox) != 4) {
-      stop("`bbox` must be numeric: c(xmin, ymin, xmax, ymax)", call. = FALSE)
+    bbox_check <- is_valid_bbox(bbox, crs)
+
+    if (!isTRUE(bbox_check)) {
+      stop(attr(bbox_check, "message"), call. = FALSE)
     }
+
+    bbox <- attr(bbox_check, "bbox")
   }
 
   # Get layer metadata (asset-level)
@@ -35,13 +43,33 @@ get_layer <- function(id, bbox = NULL) {
   }
 
   # Ensure it's hosted
-  is_hosted <- tolower(layer$is_hosted[1]) == "true"
+  is_hosted <- tolower(as.character(layer$is_hosted[1])) == "true"
 
   if (!is_hosted) {
     stop(
       "Layer '", id, "' is not hosted and cannot be streamed.",
       call. = FALSE
     )
+  }
+
+  if (!is.null(bbox)) {
+    layer_bbox <- c(layer$xmin[1], layer$ymin[1], layer$xmax[1], layer$ymax[1])
+
+    if (anyNA(layer_bbox)) {
+      stop("Layer extent metadata is missing for layer '", id, "'.", call. = FALSE)
+    }
+
+    overlap_check <- check_extent_overlap(bbox, layer_bbox)
+    overlap_status <- attr(overlap_check, "status")
+    overlap_message <- attr(overlap_check, "message")
+
+    if (identical(overlap_status, "none")) {
+      stop(overlap_message, call. = FALSE)
+    }
+
+    if (identical(overlap_status, "partial")) {
+      warning(overlap_message, call. = FALSE)
+    }
   }
 
   href <- layer$asset_href[1]

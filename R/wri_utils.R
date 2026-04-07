@@ -320,16 +320,11 @@ wri_items_df <- function(data) {
 
     item_wrapper <- data$items[[i]]
     item_obj <- item_wrapper$item
-    bbox <- item_obj$bbox
-
-    if (is.null(bbox) || length(bbox) != 4) {
-      xmin <- ymin <- xmax <- ymax <- NA_real_
-    } else {
-      xmin <- as.numeric(bbox[1])
-      ymin <- as.numeric(bbox[2])
-      xmax <- as.numeric(bbox[3])
-      ymax <- as.numeric(bbox[4])
-    }
+    bbox <- item_obj$bbox %||% rep(NA_real_, 4)
+    xmin <- if (length(bbox) >= 1) as.numeric(bbox[1]) else NA_real_
+    ymin <- if (length(bbox) >= 2) as.numeric(bbox[2]) else NA_real_
+    xmax <- if (length(bbox) >= 3) as.numeric(bbox[3]) else NA_real_
+    ymax <- if (length(bbox) >= 4) as.numeric(bbox[4]) else NA_real_
 
     assets <- item_wrapper$assets
 
@@ -391,7 +386,6 @@ wri_items_df <- function(data) {
     return(df)
   }
 
-
   # Pick COG asset
   is_raster <- grepl("geotiff", df$asset_type, ignore.case = TRUE)
 
@@ -403,7 +397,7 @@ wri_items_df <- function(data) {
 
   # Prefer hosted assets if available
   if ("is_hosted" %in% names(candidates)) {
-    hosted <- candidates[isTRUE(candidates$is_hosted), , drop = FALSE]
+    hosted <- candidates[tolower(as.character(candidates$is_hosted)) == "true", , drop = FALSE]
     if (nrow(hosted) > 0) {
       candidates <- hosted
     }
@@ -412,3 +406,17 @@ wri_items_df <- function(data) {
   # Return best match (first row)
   candidates[1, , drop = FALSE]
 }
+
+# -----------------------------------------------------------------------------
+# HELPER TO CREATE A STRUCTURED RESULT WITH A MESSAGE ATTRIBUTE
+# -----------------------------------------------------------------------------
+
+.make_result <- function(value, message = NULL, status = NULL, bbox = NULL) {
+  structure(
+    as.logical(value),
+    message = message,
+    status = status,
+    bbox = bbox
+  )
+}
+

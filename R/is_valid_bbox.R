@@ -17,6 +17,7 @@
 #'
 is_valid_bbox <- function(bbox, crs = "EPSG:4326") {
 
+  # Validate basic bbox format and value types
   if (!is.numeric(bbox) || length(bbox) != 4L) {
     return(.make_result(
       FALSE,
@@ -25,17 +26,18 @@ is_valid_bbox <- function(bbox, crs = "EPSG:4326") {
     ))
   }
 
-  bbox <- as.numeric(bbox)
-
+  # If the CRS is not EPSG:4326, attempt to reproject the bbox into a polygon 
+  # with the provided CRS to prepare for reprojection
   if (!identical(toupper(crs), "EPSG:4326")) {
     bbox_poly <- tryCatch(
       terra::as.polygons(
         terra::ext(bbox[1], bbox[3], bbox[2], bbox[4]),
         crs = crs
-      ),
+        ),
       error = function(e) NULL
     )
-
+    
+    # If conversion to polygon fails, return an invalid result
     if (is.null(bbox_poly)) {
       return(.make_result(
         FALSE,
@@ -44,11 +46,13 @@ is_valid_bbox <- function(bbox, crs = "EPSG:4326") {
       ))
     }
 
+    # Attempt to reproject to EPSG:4326 for validation
     bbox_poly <- tryCatch(
       terra::project(bbox_poly, "EPSG:4326"),
       error = function(e) NULL
     )
 
+    # If reprojection fails, return an invalid result
     if (is.null(bbox_poly)) {
       return(.make_result(
         FALSE,
@@ -57,6 +61,7 @@ is_valid_bbox <- function(bbox, crs = "EPSG:4326") {
       ))
     }
 
+    # Extract the reprojected bbox coordinates
     bbox_ext <- terra::ext(bbox_poly)
     bbox <- c(bbox_ext$xmin, bbox_ext$ymin, bbox_ext$xmax, bbox_ext$ymax)
   }

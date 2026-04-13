@@ -53,8 +53,10 @@ get_layer <- function(id, bbox = NULL, crs = "EPSG:4326") {
   }
 
   if (!is.null(bbox)) {
-    layer_bbox <- c(layer$xmin[1], layer$ymin[1], layer$xmax[1], layer$ymax[1])
 
+    # extract layer bbox (in EPSG:4326)
+    layer_bbox <- c(layer$xmin[1], layer$ymin[1], layer$xmax[1], layer$ymax[1])
+    
     if (anyNA(layer_bbox)) {
       stop("Layer extent metadata is missing for layer '", id, "'.", call. = FALSE)
     }
@@ -80,19 +82,24 @@ get_layer <- function(id, bbox = NULL, crs = "EPSG:4326") {
   tryCatch({
 
     rast <- terra::rast(vsi_path)
-####
-#    if (!is.null(bbox)) {
 
-#      bbox_ext <- terra::ext(bbox[1], bbox[3], bbox[2], bbox[4])
-#      bbox_vect <- terra::as.polygons(bbox_ext, crs = crs)
+    if (!is.null(bbox)) {
 
-#      bbox_transformed <- terra::project(bbox_vect, "epsg:4326")
+      # extract spatial extent of user bbox
+      bbox_ext <- terra::ext(bbox[1], bbox[3], bbox[2], bbox[4])
+      
+      # project user bbox to match raster crs (5070)
+      bbox_projected <- terra::project(bbox_ext, from = "EPSG:4326", to = terra::crs(rast))
 
-#      rast <- terra::crop(rast, bbox_transformed)
-#    }
+      # convert projected bbox to a SpatVector polygon for cropping
+      bbox_vect <- terra::as.polygons(bbox_projected, crs = terra::crs(rast))
+
+      # crop the raster to the projected bbox
+      rast <- terra::crop(rast, bbox_vect)
+    }
 
     rast
-####
+
   }, error = function(e) {
     stop(
       "Failed to retrieve layer '", id, "'.\n",

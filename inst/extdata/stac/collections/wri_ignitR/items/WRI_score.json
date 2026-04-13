@@ -26,7 +26,7 @@
     "wri_domain": "unknown",
     "wri_dimension": null,
     "is_hosted": true
-  },
+  }, 
   "assets": {
     "data": {
       "href": "https://knb.ecoinformatics.org/data/wri-data-processing/cogs/WRI_score.tif",

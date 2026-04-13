@@ -70,6 +70,8 @@ Public-facing
 - `print.wri_overview()` -> kept
   No major rewrite; benefits from repaired overview object.
 
+
+
 Internal `wri_utils.R`
 
 - `%||%` -> kept
@@ -110,6 +112,8 @@ Internal `wri_utils.R`
 
 - `.make_result()` -> added
   Shared helper for logical return + `message/status/bbox` attrs.
+
+
 
 Removed / stale names cleaned up
 

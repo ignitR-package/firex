@@ -80,19 +80,19 @@ get_layer <- function(id, bbox = NULL, crs = "EPSG:4326") {
   tryCatch({
 
     rast <- terra::rast(vsi_path)
+####
+#    if (!is.null(bbox)) {
 
-    if (!is.null(bbox)) {
+#      bbox_ext <- terra::ext(bbox[1], bbox[3], bbox[2], bbox[4])
+#      bbox_vect <- terra::as.polygons(bbox_ext, crs = crs)
 
-      bbox_ext <- terra::ext(bbox[1], bbox[3], bbox[2], bbox[4])
-      bbox_vect <- terra::as.polygons(bbox_ext, crs = "EPSG:4326")
+#      bbox_transformed <- terra::project(bbox_vect, "epsg:4326")
 
-      bbox_transformed <- terra::project(bbox_vect, terra::crs(rast))
-
-      rast <- terra::crop(rast, bbox_transformed)
-    }
+#      rast <- terra::crop(rast, bbox_transformed)
+#    }
 
     rast
-
+####
   }, error = function(e) {
     stop(
       "Failed to retrieve layer '", id, "'.\n",

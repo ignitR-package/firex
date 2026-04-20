@@ -1,9 +1,20 @@
 bibentry(
-  bibtype  = "Article",
-  title    =  "Welcome to the {firex}""
-  author   = "Emily  Miller - ermiller@ucsb.edu, Ixel Medrano, , "imedrano@ucsb.edu", role = "aut"), person("Kaiju", "Morquecho", , "kaimorquecho@ucsb.edu", role = "aut"), person("Hylaea", "Miller", , "hylaea@ucsb.edu", role = "aut""
-  journal  = ,
-  year     = 2026
-  version  = ,
-  doi      =
+  bibtype = "Manual",
+  title = "firex: Access Wildfire Resilience Index Data" ,
+  author = personList(
+  person("Ixel", "Medrano", email = "imedrano@ucsb,edu"),
+  person("Hylaea", "Miller", email = "hylaea@ucsb.edu"),
+  person("Kaiju", "Morquecho", email = "kaimorquecho@ucsb.edu"),
+  person("Emily", "Miller",email = "ermiller@ucsb.edu")
+  ),
+  organization = "UC Santa Barbara, Bren School of Environmental Science & Management",
+  program = "Master of Environmental Data Science",
+  year = "2026",
+  note = "R package version 0.0.0.9000",
+  url = "https://github.com/ignitR-package/firex",
+
+  textVersion = paste("Medrano, I. Miller, H., Morquecho, K., Miller, E. (2026).",
+  "firex: Access Wildfire Resilience Index Data.",
+  "R package version 0.0.0.9000.",
+   "https://github.com/ignitR-package/firex")
 )

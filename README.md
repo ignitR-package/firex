@@ -18,9 +18,26 @@ This package provides utilities for querying a local STAC catalog and retrieving
 ## Example Usage
 ```r
 library(firex)
-items <- load_stac_items()
-domains <- get_domains(items)
-asset_urls <- get_asset_urls(items[[1]])
+
+# Browse the catalog — see all domains, dimensions, and available layers
+wri_overview()
+
+# Get the full catalog as a data frame (one row per asset)
+df <- wri_overview_df()
+
+# Look up metadata for a specific layer
+layer_info("WRI_score")
+
+# Retrieve a raster layer (full extent)
+rast <- get_layer("WRI_score")
+
+# Retrieve a raster layer cropped to a bounding box (xmin, ymin, xmax, ymax)
+bbox <- c(-122, 37, -121, 38)
+rast <- get_layer("WRI_score", bbox = bbox)
+
+# Query STAC items by property
+items <- wri_overview()$data$items
+water_status <- query_stac_flexible(items, wri_domain = "water", data_type = "status")
 ```
 
 See [r-pkgs.org](https://r-pkgs.org/whole-game.html) for best practices.

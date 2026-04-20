@@ -1,48 +1,36 @@
-test_that("query returns a basic layer table", {
-  layers <- list_layers()
-
-  expect_s3_class(layers, "data.frame")
-  expect_true(nrow(layers) > 0)
-  expect_true(all(c("id", "domain", "dimension", "data_type", "is_hosted", "href") %in% names(layers)))
-})
-
-test_that("query filters hosted layers", {
-  hosted <- list_layers(hosted_only = TRUE)
-
-  expect_s3_class(hosted, "data.frame")
-  expect_true(nrow(hosted) > 0)
-  expect_true(all(hosted$is_hosted))
-})
-
-test_that("explore helpers return expected shapes", {
-  domains <- list_domains()
-  dimensions <- list_dimensions()
-  data_types <- list_data_types()
-
-  expect_type(domains, "character")
-  expect_type(dimensions, "character")
-  expect_type(data_types, "character")
-  expect_true(length(domains) > 0)
-})
-
-test_that("search_layers can find known IDs by pattern", {
-  layers <- list_layers()
-  known_id <- layers$id[[1]]
-  pattern <- substr(known_id, 1, 4)
-
-  matches <- search_layers(pattern)
-  expect_s3_class(matches, "data.frame")
-  expect_true(known_id %in% matches$id)
-})
-
-test_that("retrieve validates inputs before attempting download", {
-  expect_error(get_layer(), "Layer 'id' is required")
-  expect_error(
-    get_layer("definitely_not_a_real_layer_id"),
-    "not found in STAC catalog"
+test_that("query_stac_flexible filters items by property", {
+  items <- list(
+    list(id = "a", properties = list(wri_domain = "water", data_type = "status")),
+    list(id = "b", properties = list(wri_domain = "land", data_type = "status")),
+    list(id = "c", properties = list(wri_domain = "water", data_type = "trend"))
   )
+
+  matches <- query_stac_flexible(items, wri_domain = "water", data_type = "status")
+
+  expect_type(matches, "list")
+  expect_length(matches, 1)
+  expect_identical(matches[[1]]$id, "a")
+})
+
+test_that("layer_info validates inputs before reading the catalog", {
+  expect_error(layer_info(), "`layer_id` must be a single non-empty character string.")
+  expect_error(
+    layer_info("WRI_score", fresh = FALSE),
+    fixed = TRUE,
+    "`fresh = FALSE` is not implemented yet."
+  )
+})
+
+test_that("get_layer validates inputs before attempting retrieval", {
+  expect_error(get_layer(), "`id` must be a single non-empty character string.")
   expect_error(
     get_layer(id = "WRI_score", bbox = c(-122, 37, -121)),
-    "'bbox' must be a numeric vector of length 4"
+    fixed = TRUE,
+    "`bbox` must contain four numeric values: c(xmin, ymin, xmax, ymax)."
+  )
+  expect_error(
+    get_layer(id = "WRI_score", bbox = c(-100, 50, -120, 30)),
+    fixed = TRUE,
+    "You supplied bbox = c(xmin = -100, ymin = 50, xmax = -120, ymax = 30). `xmin` must be less than `xmax`."
   )
 })

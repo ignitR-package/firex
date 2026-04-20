@@ -5,7 +5,10 @@
 #' @return Filtered list of items
 #' @export
 #' @examples
-#' items <- load_stac_items()
+#' items <- list(
+#'   list(properties = list(wri_domain = "water", data_type = "status")),
+#'   list(properties = list(wri_domain = "land", data_type = "status"))
+#' )
 #' query_stac_flexible(items, wri_domain = "water", data_type = "status")
 query_stac_flexible <- function(items, ...) {
   filters <- list(...)

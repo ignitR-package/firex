@@ -1,142 +1,147 @@
 ---
-title: "fedex Package Demo"
+title: "firex Package Demo"
 format: html
 ---
 
-# Getting Started 
+# Getting Started
 
-This demo shows how to explore, query, and retrieve WRI data using the `fedex` package.
+This demo shows how to explore, query, and retrieve WRI data using the `firex` package.
 
 ```{r setup, message=FALSE}
 # Load the package (development mode)
-# If you've installed the package, use: library(fedex)
-# For development, use:
+# If you've installed the package, use: library(firex)
+# For development from the package root, use:
 devtools::load_all()
 
 # Load terra for plotting
 library(terra)
-
-# Load tictoc for timing retrievals
-library(tictoc)
 ```
 
 ## Step 1: Explore What's Available
 
-Explore catagories:
+`wri_overview()` reads the local STAC catalog and prints a summary of the
+available domains, dimensions, and data types.
+
+```{r overview}
+catalog <- wri_overview()
+catalog
+```
+
+`wri_overview_df()` returns a flat data frame that is convenient for quick
+filtering in base R.
+
+```{r overview-df}
+catalog_df <- wri_overview_df()
+head(catalog_df[, c("id", "wri_domain", "wri_dimension", "data_type", "is_hosted")])
+```
+
+You can still inspect the categories directly from the flattened catalog:
 
 ```{r explore-categories}
-# What domains exist?
-list_domains()
-
-# What dimensions are available?
-list_dimensions()
-
-# What data types are available?
-list_data_types()
+sort(unique(catalog_df$wri_domain))
+sort(unique(catalog_df$wri_dimension))
+sort(unique(catalog_df$data_type))
 ```
 
-Get an overview of the data catalog (aggregated version of the above functions):
+## Step 2: Filter and Inspect Layers
 
-```{r explore-catalog}
-# Get a summary of the entire catalog
-catalog_summary()
+Filter the catalog data frame to find layers you want to work with:
+
+```{r filter-df}
+# All water layers
+subset(
+  catalog_df,
+  wri_domain == "water",
+  select = c(id, wri_dimension, data_type)
+)
+
+# Indicator layers for air quality
+subset(
+  catalog_df,
+  wri_domain == "air_quality" & data_type == "indicator",
+  select = c(id, wri_dimension, data_type)
+)
+
+# Search layer ids by name pattern
+catalog_df[grepl("surface_water|asthma", catalog_df$id), c("id", "wri_domain", "data_type")]
 ```
 
-Search file names for specific layers:
+Use `layer_info()` when you want the full metadata for a single layer:
 
-```{r search-layers}
-# Find all fire-related layers
-search_layers("fire")
-
-# Find asthma-related layers
-search_layers("asthma")
+```{r layer-info}
+layer_info("water_status_surface_water_quantity")
 ```
 
-## Step 2: Query and Filter Layers
+Use `query_stac_flexible()` when you want to filter the underlying STAC items by
+property values:
 
-Filter to what you want:
+```{r query-stac}
+water_indicator_items <- query_stac_flexible(
+  catalog$data$items,
+  wri_domain = "water",
+  data_type = "indicator"
+)
 
-```{r query-layers}
-# Get all air quality layers
-air_quality <- list_layers(domain = "air_quality")
-print(air_quality)
-
-# Get all resistance indicators across all domains
-resistance <- list_layers(dimension = "resistance", data_type = "indicator")
-head(resistance)
-
-# See what's currently hosted on KNB
-hosted <- list_layers(hosted_only = TRUE)
-print(hosted)
+vapply(water_indicator_items, function(x) x$id, character(1))
 ```
 
 ## Step 3: Retrieve and Plot Data
 
-### Example 1: Get Full WRI Score Layer (no bbox)
+### Example 1: Get the Full WRI Score Layer
 
 ```{r get-layer-full}
-# Get the entire WRI score layer
-tic("Full extent retrieval")
-wri_full <- get_layer("WRI_score")
-toc()
+# Returns a SpatRaster pointing at the hosted COG
+t_full <- system.time({
+  wri_full <- get_layer("WRI_score")
+})
+t_full
 ```
 
 ```{r plot-layer-full}
-# Plot it (Takes ~1.5 min)
-#tic("Plotting full layer")
+# Plotting the full layer can take a while, so it is left commented out.
 #plot(wri_full,
 #     main = "WRI Score - Full Extent",
 #     col = hcl.colors(100, "YlOrRd", rev = TRUE))
-#toc()
 ```
 
-### Example 2: Get WRI Score for Northern California (with bbox)
+### Example 2: Get WRI Score for Northern California
 
 ```{r get-layer-bbox}
-# Define a bounding box for northern California
-# Format: c(xmin, ymin, xmax, ymax) in EPSG:4326 (lon/lat)
+# Bounding boxes use c(xmin, ymin, xmax, ymax) in the supplied CRS.
 bbox_norcal <- c(-122, 37, -121, 38)
 
-# Retrieve the WRI score for this area
-tic("Northern California bbox retrieval")
-wri_norcal <- get_layer("WRI_score", bbox = bbox_norcal)
-toc()
+t_norcal <- system.time({
+  wri_norcal <- get_layer("WRI_score", bbox = bbox_norcal)
+})
+t_norcal
 ```
 
 ```{r plot-layer-bbox}
-# Plot it
-tic("Northern California bbox plotting")
 plot(wri_norcal,
      main = "WRI Score - Northern California",
      col = hcl.colors(100, "YlOrRd", rev = TRUE))
-toc()
 ```
 
-### Example 3: Get WRI Score for Larger Region
+### Example 3: Retrieve a Specific Indicator Layer
 
-```{r get-layer-larger}
-# Define a larger bounding box (Pacific Northwest)
-bbox_pnw <- c(-125, 42, -110, 49)
+```{r get-layer-indicator}
+indicator_id <- "water_status_surface_water_quantity"
 
-# Retrieve the WRI score for this larger area
-tic("Pacific Northwest bbox retrieval")
-wri_pnw <- get_layer("WRI_score", bbox = bbox_pnw)
-toc()
+t_indicator <- system.time({
+  water_quantity_norcal <- get_layer(indicator_id, bbox = bbox_norcal)
+})
+t_indicator
 ```
 
-```{r plot-layer-larger}
-# Plot it
-tic("Pacific Northwest bbox plotting")
-plot(wri_pnw,
-     main = "WRI Score - Pacific Northwest",
+```{r plot-layer-indicator}
+plot(water_quantity_norcal,
+     main = "Surface Water Quantity - Northern California",
      col = hcl.colors(100, "YlOrRd", rev = TRUE))
-toc()
 ```
 
 ## Summary
 
-1. **Explore**: `catalog_summary()`, `list_domains()`, `search_layers()` to discover what's available
-2. **Query**: `list_layers()` filters by domain, dimension, or data type
-3. **Retrieve**: `get_layer(id, bbox)` to get the actual raster data for your area of interest
-
+1. Explore the catalog with `wri_overview()` and `wri_overview_df()`.
+2. Filter layers with base R, `layer_info()`, and `query_stac_flexible()`.
+3. Retrieve hosted rasters with `get_layer(id, bbox = ...)`.
 

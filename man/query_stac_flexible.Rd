@@ -7,7 +7,7 @@
 query_stac_flexible(items, ...)
 }
 \arguments{
-\item{items}{List of STAC items, or the entries in \code{wri_overview()$data$items}.}
+\item{items}{List of STAC items}
 
 \item{...}{Named property-value pairs to filter by}
 }
@@ -19,8 +19,8 @@ Query STAC items flexibly by any property
 }
 \examples{
 items <- list(
-  list(id = "a", properties = list(wri_domain = "water", data_type = "status")),
-  list(id = "b", properties = list(wri_domain = "land", data_type = "status"))
+  list(properties = list(wri_domain = "water", data_type = "status")),
+  list(properties = list(wri_domain = "land", data_type = "status"))
 )
 query_stac_flexible(items, wri_domain = "water", data_type = "status")
 }

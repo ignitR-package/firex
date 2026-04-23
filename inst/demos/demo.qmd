@@ -73,11 +73,14 @@ layer_info("water_status_surface_water_quantity")
 ```
 
 Use `query_stac_flexible()` when you want to filter the underlying STAC items by
-property values:
+property values. `wri_overview()$data$items` stores wrapped entries, so unwrap
+the raw STAC item objects first:
 
 ```{r query-stac}
+stac_items <- lapply(catalog$data$items, function(x) x$item)
+
 water_indicator_items <- query_stac_flexible(
-  catalog$data$items,
+  stac_items,
   wri_domain = "water",
   data_type = "indicator"
 )

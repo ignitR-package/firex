@@ -37,7 +37,7 @@ rast <- get_layer("WRI_score", bbox = bbox)
 
 # Query STAC items by property
 catalog <- wri_overview()
-items <- catalog$data$items
+items <- lapply(catalog$data$items, function(x) x$item)
 water_status <- query_stac_flexible(items, wri_domain = "water", data_type = "status")
 ```
 

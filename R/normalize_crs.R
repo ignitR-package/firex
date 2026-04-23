@@ -1,15 +1,16 @@
 #' Normalize a CRS specification
-#' 
-#' Accepts CRS in several common formats and returns a terra recognized form.
-#' 
-#' @param crs One of the following formats: an integer EPSG code (e.g. \code{4326}), a character string... 
-#' [COMPLETE DESCRIPTION OF ACCEPTED CRS FORMATS]
-#' 
+#'
+#' Accepts CRS in several common formats and returns a terra-recognized form.
+#'
+#' @param crs One of: an integer EPSG code (e.g. \code{4326}); a character
+#'   string (e.g. \code{"EPSG:4326"}, \code{"4326"}, a PROJ string, or a WKT
+#'   string); or a SpatVector, SpatRaster, or SpatExtent whose CRS will be
+#'   pulled. Pass \code{NULL} to return \code{NULL}.
+#'
 #' @return A length-1 logical with \code{"status"}, \code{"message"}, and
-#'   \code{"bbox"} attributes. On success, the \code{"crs"} attribute contains
-#'   the validated CRS string.
-#' 
-#' 
+#'   \code{"crs"} attributes. On success, \code{"crs"} contains the
+#'   normalized CRS string.
+#'
 #' @keywords internal
 normalize_crs <- function(crs) {
 

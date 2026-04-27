@@ -10,11 +10,13 @@ This demo shows how to explore, query, and retrieve WRI data using the `firex` p
 ```{r setup, message=FALSE}
 # Load the package (development mode)
 # If you've installed the package, use: library(firex)
-# Install via R console with: devtools::install_github("ignitR-package/firex")
+# Install via R console with:
+devtools::install_github("ignitR-package/firex")
 # For development from the package root, use:
-devtools::load_all()
+# devtools::load_all()
 
 # Load terra for plotting
+library(firex)
 library(terra)
 ```
 

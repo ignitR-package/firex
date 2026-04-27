@@ -14,19 +14,36 @@
 #' bbox <- c(-122, 37, -121, 38)
 #' rast <- get_layer("WRI_score", bbox = bbox)
 #' }
-get_layer <- function(id, bbox = NULL, crs = "EPSG:4326") {
+get_layer <- function(id, aoi = NULL, aoi_crs = NULL) {
   if (missing(id) || !is.character(id) || length(id) != 1 || !nzchar(id)) {
     stop("`id` must be a single non-empty character string.", call. = FALSE)
   }
 
-  if (!is.null(bbox)) {
-    bbox_check <- is_valid_bbox(bbox, crs)
+  if (!is.null(aoi)) {
 
-    if (!isTRUE(bbox_check)) {
-      stop(attr(bbox_check, "message"), call. = FALSE)
+    # Normalize crs if provided
+    if (!is.null(aoi_crs)) {
+
+      crs_check <- normalize_crs(aoi_crs)
+      if (!isTRUE(crs_check)) stop(attr(crs_check, "message"), call. = FALSE)
+
+      aoi_crs <- attr(crs_check, "crs")
     }
 
+    # Resolve input to bbox
+    aoi_check <- resolve_to_bbox(aoi, aoi_crs)
+
+    if (!isTRUE(aoi_check)) stop(attr(aoi_check, "message"), call. = FALSE)
+    bbox <- attr(aoi_check, "bbox")
+    bbox_crs <- attr(aoi_check, "crs")
+
+    # Validate bbox
+    bbox_check <- is_valid_bbox(bbox, bbox_crs)
+
+    if (!isTRUE(bbox_check)) stop(attr(bbox_check, "message"), call. = FALSE)
     bbox <- attr(bbox_check, "bbox")
+
+
   }
 
   # Get layer metadata (asset-level)

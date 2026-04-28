@@ -24,7 +24,7 @@ Both files are stored in `inst/demos/data/` and accessed via
 
 ```{r setup, message=FALSE}
 # Install from GitHub (once):
-# devtools::install_github("ignitR-package/firex")
+devtools::install_github("ignitR-package/firex")
 
 # Development mode from the package root:
 # devtools::load_all()

@@ -1,3 +1,35 @@
+#' Resolve an area-of-interest to a bounding box
+#'
+#' Accepts an area of interest in several common formats and returns its
+#' axis-aligned bounding box as a numeric vector \code{c(xmin, ymin, xmax,
+#' ymax)} in the input CRS.
+#'
+#' @param aoi Area of interest. Accepted inputs:
+#'   \itemize{
+#'     \item Numeric vector \code{c(xmin, ymin, xmax, ymax)} — bounding box;
+#'       \code{aoi_crs} is required.
+#'     \item Character path to a shapefile (\code{.shp}) or GeoJSON file.
+#'     \item An \code{sf} or \code{sfc} object.
+#'     \item A \code{terra::SpatVector}, \code{terra::SpatRaster}, or
+#'       \code{terra::SpatExtent}.
+#'   }
+#' @param aoi_crs Character or integer CRS specification (e.g.
+#'   \code{"EPSG:4326"} or \code{4326}). Required when \code{aoi} is a
+#'   numeric vector or a CRS-less spatial object; must be omitted when
+#'   \code{aoi} already carries a CRS.
+#'
+#' @return A length-1 logical. On success (\code{TRUE}) carries \code{"bbox"}
+#'   (numeric \code{c(xmin, ymin, xmax, ymax)}) and \code{"crs"} attributes.
+#'   On failure (\code{FALSE}) carries a \code{"message"} attribute describing
+#'   the problem.
+#'
+#' @export
+#'
+#' @examples
+#' result <- resolve_to_bbox(c(-122, 37, -121, 38), aoi_crs = "EPSG:4326")
+#' isTRUE(result)        # TRUE
+#' attr(result, "bbox")  # c(-122, 37, -121, 38)
+#' attr(result, "crs")   # "EPSG:4326"
 resolve_to_bbox <- function(aoi, aoi_crs = NULL) {
 
     # Check if input numeric vect len 4

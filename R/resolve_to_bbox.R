@@ -23,7 +23,7 @@
 #'   On failure (\code{FALSE}) carries a \code{"message"} attribute describing
 #'   the problem.
 #'
-#' @export
+#' @keywords internal
 #'
 #' @examples
 #' result <- resolve_to_bbox(c(-122, 37, -121, 38), aoi_crs = "EPSG:4326")

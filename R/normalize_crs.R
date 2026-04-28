@@ -1,15 +1,35 @@
 #' Normalize a CRS specification
 #'
-#' Accepts CRS in several common formats and returns a terra-recognized form.
+#' Validates a coordinate reference system supplied in any of the common
+#' shorthand formats and returns a canonicalized string that \code{terra}
+#' recognizes. Useful for checking a CRS value before passing it to
+#' \code{\link{get_layer}} or \code{\link{resolve_to_bbox}}.
 #'
-#' @param crs One of: an integer EPSG code (e.g. \code{4326}); a character
-#'   string (e.g. \code{"EPSG:4326"}, \code{"4326"}, a PROJ string, or a WKT
-#'   string); or a SpatVector, SpatRaster, or SpatExtent whose CRS will be
-#'   pulled. Pass \code{NULL} to return \code{NULL}.
+#' @param crs One of:
+#'   \itemize{
+#'     \item An integer EPSG code (e.g. \code{4326}).
+#'     \item A character string: \code{"EPSG:4326"}, a bare numeric string
+#'       (\code{"4326"}), a PROJ string, or a WKT string.
+#'     \item \code{NULL} — treated as "no CRS" and returns \code{TRUE}
+#'       with no \code{"crs"} attribute.
+#'   }
 #'
-#' @return A length-1 logical with \code{"status"}, \code{"message"}, and
-#'   \code{"crs"} attributes. On success, \code{"crs"} contains the
-#'   normalized CRS string.
+#' @return A length-1 logical. On success (\code{TRUE}) carries a \code{"crs"}
+#'   attribute containing the normalized CRS string. On failure (\code{FALSE})
+#'   carries a \code{"message"} attribute describing why the input was not
+#'   recognized.
+#'
+#' @examples
+#' r <- normalize_crs(4326)
+#' isTRUE(r)          # TRUE
+#' attr(r, "crs")     # "EPSG:4326"
+#'
+#' r2 <- normalize_crs("32611")
+#' attr(r2, "crs")    # "EPSG:32611"
+#'
+#' r_bad <- normalize_crs("not-a-crs")
+#' isTRUE(r_bad)      # FALSE
+#' attr(r_bad, "message")
 #'
 #' @keywords internal
 normalize_crs <- function(crs) {

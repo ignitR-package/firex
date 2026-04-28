@@ -108,45 +108,48 @@ vapply(water_items, function(x) x$id, character(1))
 
 ## Step 3: Input Validation Helpers
 
-Both `normalize_crs()` and `resolve_to_bbox()` return a length-1 logical
-with attributes — they never throw. Inspect `isTRUE()` to branch on
-success/failure, and `attr(result, "message")` on failure.
+`normalize_crs()` and `resolve_to_bbox()` are internal functions called
+automatically by `get_layer()` — they are not part of the public API.
+They are accessed here with `firex:::` (triple colon) for demonstration
+purposes only. Both return a length-1 logical with attributes — they never
+throw. Inspect `isTRUE()` to branch on success/failure, and
+`attr(result, "message")` on failure.
 
 ---
 
-### `normalize_crs()` — Canonicalize a CRS specification
+### `firex:::normalize_crs()` — Canonicalize a CRS specification
 
 Accepts integer EPSG codes, `"EPSG:XXXX"` strings, bare numeric strings,
 PROJ strings, and WKT.
 
 ```{r normalize-valid}
 # Integer EPSG code
-r_int <- normalize_crs(4326)
+r_int <- firex:::normalize_crs(4326)
 isTRUE(r_int);  attr(r_int, "crs")
 
 # "EPSG:XXXX" string
-r_str <- normalize_crs("EPSG:4326")
+r_str <- firex:::normalize_crs("EPSG:4326")
 isTRUE(r_str);  attr(r_str, "crs")
 
 # Bare numeric string (auto-prefixed)
-r_bare <- normalize_crs("32611")
+r_bare <- firex:::normalize_crs("32611")
 isTRUE(r_bare);  attr(r_bare, "crs")
 
 # NULL is a valid no-op
-r_null <- normalize_crs(NULL)
+r_null <- firex:::normalize_crs(NULL)
 isTRUE(r_null)
 ```
 
 ```{r normalize-invalid}
 # ── EDGE CASE: unrecognized CRS string ─────────────────────────────────────
-r_bad <- normalize_crs("not-a-crs")
+r_bad <- firex:::normalize_crs("not-a-crs")
 isTRUE(r_bad)
 attr(r_bad, "message")
 ```
 
 ---
 
-### `resolve_to_bbox()` — Extract a bbox from any spatial input
+### `firex:::resolve_to_bbox()` — Extract a bbox from any spatial input
 
 ---
 
@@ -155,7 +158,7 @@ attr(r_bad, "message")
 A CRS must always be supplied explicitly for numeric input.
 
 ```{r resolve-numeric}
-res_num <- resolve_to_bbox(c(-118.2, 34.1, -117.9, 34.3),
+res_num <- firex:::resolve_to_bbox(c(-118.2, 34.1, -117.9, 34.3),
                            aoi_crs = "EPSG:4326")
 isTRUE(res_num)
 attr(res_num, "bbox")
@@ -170,7 +173,7 @@ CRS is read from the `.prj` sidecar; `aoi_crs` must be omitted.
 
 ```{r resolve-shp}
 # Source: LA County Open Data — Eaton Fire Perimeter
-res_shp <- resolve_to_bbox(shp_path)
+res_shp <- firex:::resolve_to_bbox(shp_path)
 isTRUE(res_shp)
 attr(res_shp, "bbox")
 attr(res_shp, "crs")
@@ -182,7 +185,7 @@ attr(res_shp, "crs")
 
 ```{r resolve-geojson}
 # Source: LA County Open Data — Eaton Fire Perimeter
-res_gjson <- resolve_to_bbox(gjson_path)
+res_gjson <- firex:::resolve_to_bbox(gjson_path)
 isTRUE(res_gjson)
 attr(res_gjson, "bbox")
 attr(res_gjson, "crs")
@@ -194,7 +197,7 @@ attr(res_gjson, "crs")
 
 ```{r resolve-sf}
 # eaton_sf loaded above via sf::st_read(); CRS is embedded — omit aoi_crs
-res_sf <- resolve_to_bbox(eaton_sf)
+res_sf <- firex:::resolve_to_bbox(eaton_sf)
 isTRUE(res_sf)
 attr(res_sf, "bbox")
 ```
@@ -205,7 +208,7 @@ attr(res_sf, "bbox")
 
 ```{r resolve-spatvector}
 # eaton_vect loaded above via terra::vect(); CRS is embedded — omit aoi_crs
-res_vect <- resolve_to_bbox(eaton_vect)
+res_vect <- firex:::resolve_to_bbox(eaton_vect)
 isTRUE(res_vect)
 attr(res_vect, "bbox")
 ```
@@ -218,7 +221,7 @@ attr(res_vect, "bbox")
 
 ```{r resolve-spatextent}
 # eaton_ext derived from eaton_vect above (terra::ext strips the CRS)
-res_ext <- resolve_to_bbox(eaton_ext, aoi_crs = "EPSG:4326")
+res_ext <- firex:::resolve_to_bbox(eaton_ext, aoi_crs = "EPSG:4326")
 isTRUE(res_ext)
 attr(res_ext, "bbox")
 ```
@@ -228,7 +231,7 @@ attr(res_ext, "bbox")
 ## Step 4: Retrieve and Plot Data with `get_layer()`
 
 `get_layer(id, aoi, aoi_crs)` accepts the same AOI inputs as
-`resolve_to_bbox()`. All reprojection from the AOI CRS to the raster's
+`firex:::resolve_to_bbox()`. All reprojection from the AOI CRS to the raster's
 native CRS is handled internally.
 
 ---
@@ -354,36 +357,36 @@ with an informative message, and error-triggering calls are wrapped in
 
 ---
 
-### Validation failures — `normalize_crs()`
+### Validation failures — `firex:::normalize_crs()`
 
 ```{r edge-normalize}
 # ── Unrecognized CRS ───────────────────────────────────────────────────────
-r <- normalize_crs("EPSG:999999999")   # valid format, invalid code
+r <- firex:::normalize_crs("EPSG:999999999")   # valid format, invalid code
 isTRUE(r);  attr(r, "message")
 ```
 
 ---
 
-### Validation failures — `resolve_to_bbox()`
+### Validation failures — `firex:::resolve_to_bbox()`
 
 ```{r edge-resolve-no-crs}
 # ── Numeric bbox without aoi_crs ───────────────────────────────────────────
 # get_layer would forward the same error here; resolve_to_bbox catches it early
-r <- resolve_to_bbox(c(-118.2, 34.1, -117.9, 34.3))
+r <- firex:::resolve_to_bbox(c(-118.2, 34.1, -117.9, 34.3))
 isTRUE(r);  attr(r, "message")
 ```
 
 ```{r edge-resolve-crs-conflict}
 # ── aoi_crs supplied when the object already carries a CRS ─────────────────
 # sf objects embed their CRS; passing aoi_crs too is ambiguous and rejected
-r <- resolve_to_bbox(eaton_sf, aoi_crs = "EPSG:4326")
+r <- firex:::resolve_to_bbox(eaton_sf, aoi_crs = "EPSG:4326")
 isTRUE(r);  attr(r, "message")
 ```
 
 ```{r edge-resolve-extent-no-crs}
 # ── SpatExtent without aoi_crs ─────────────────────────────────────────────
 # SpatExtent strips the CRS; aoi_crs is mandatory
-r <- resolve_to_bbox(eaton_ext)
+r <- firex:::resolve_to_bbox(eaton_ext)
 isTRUE(r);  attr(r, "message")
 ```
 
@@ -441,11 +444,11 @@ tryCatch(
 |------|------------|---------|
 | 1 | `wri_overview()`, `wri_overview_df()` | Browse the catalog |
 | 2 | `layer_info()`, `query_stac_flexible()` | Inspect layer metadata |
-| 3 | `normalize_crs()`, `resolve_to_bbox()` | Validate inputs before fetching |
+| 3 | `firex:::normalize_crs()`, `firex:::resolve_to_bbox()` | Validate inputs before fetching |
 | 4 | `get_layer(id, aoi, aoi_crs)` | Stream a hosted raster, optionally cropped |
 | 5 | — | Edge cases: validation failures, partial-overlap warnings, no-overlap errors |
 
-**`aoi` input types accepted by `resolve_to_bbox()` and `get_layer()`:**
+**`aoi` input types accepted by `firex:::resolve_to_bbox()` and `get_layer()`:**
 
 | Type | `aoi_crs` required? |
 |------|---------------------|

@@ -5,40 +5,63 @@ format: html
 
 # Getting Started
 
-This demo shows how to explore, query, and retrieve WRI data using the `firex` package.
+This demo shows how to explore, query, and retrieve WRI Aqueduct data using
+the `firex` package. It covers all supported area-of-interest input types and
+demonstrates validation, edge-case handling, and expected warning/error
+messages.
+
+## Data Sources
+
+Spatial inputs used in this demo:
+
+| File | Format | Source |
+|------|--------|--------|
+| `Eaton_Perimeter_20250121.shp` | Shapefile | [LA County Open Data — Eaton Fire Perimeter](https://data.lacounty.gov/datasets/lacounty::eaton-fire-perimeter/about) |
+| `Eaton_Fire_Perimeter.geojson` | GeoJSON | [LA County Open Data — Eaton Fire Perimeter](https://data.lacounty.gov/datasets/lacounty::eaton-fire-perimeter/about) |
+
+Both files are stored in `inst/demos/data/` and accessed via
+`system.file("demos/data/...", package = "firex")`.
 
 ```{r setup, message=FALSE}
-# Load the package (development mode)
-# If you've installed the package, use: library(firex)
-# Install via R console with:
-devtools::install_github("ignitR-package/firex")
-# For development from the package root, use:
+# Install from GitHub (once):
+# devtools::install_github("ignitR-package/firex")
+
+# Development mode from the package root:
 # devtools::load_all()
 
-# Load terra for plotting
 library(firex)
 library(terra)
+library(sf)
+
+# Paths to bundled demo data (LA County Open Data, Eaton Fire perimeter)
+data_dir  <- system.file("demos/data", package = "firex")
+shp_path  <- file.path(data_dir, "Eaton_Perimeter_20250121.shp")
+gjson_path <- file.path(data_dir, "Eaton_Fire_Perimeter.geojson")
+
+# Pre-load as in-memory objects for the input-type examples below
+eaton_sf   <- sf::st_read(shp_path,   quiet = TRUE)
+eaton_vect <- terra::vect(shp_path)
+eaton_ext  <- terra::ext(eaton_vect)   # SpatExtent (no embedded CRS)
 ```
+
+---
 
 ## Step 1: Explore What's Available
 
-`wri_overview()` reads the local STAC catalog and prints a summary of the
-available domains, dimensions, and data types.
+`wri_overview()` reads the local STAC catalog and summarises available
+domains, dimensions, and data types.
 
 ```{r overview}
 catalog <- wri_overview()
 catalog
 ```
 
-`wri_overview_df()` returns a flat data frame that is convenient for quick
-filtering in base R.
+`wri_overview_df()` returns a flat data frame for quick filtering.
 
 ```{r overview-df}
 catalog_df <- wri_overview_df()
 head(catalog_df[, c("id", "wri_domain", "wri_dimension", "data_type", "is_hosted")])
 ```
-
-You can still inspect the categories directly from the flattened catalog:
 
 ```{r explore-categories}
 sort(unique(catalog_df$wri_domain))
@@ -46,108 +69,390 @@ sort(unique(catalog_df$wri_dimension))
 sort(unique(catalog_df$data_type))
 ```
 
-## Step 2: Filter and Inspect Layers
+---
 
-Filter the catalog data frame to find layers you want to work with:
+## Step 2: Filter and Inspect Layers
 
 ```{r filter-df}
 # All water layers
-subset(
-  catalog_df,
-  wri_domain == "water",
-  select = c(id, wri_dimension, data_type)
-)
+subset(catalog_df, wri_domain == "water",
+       select = c(id, wri_dimension, data_type))
 
 # Indicator layers for air quality
-subset(
-  catalog_df,
-  wri_domain == "air_quality" & data_type == "indicator",
-  select = c(id, wri_dimension, data_type)
-)
+subset(catalog_df, wri_domain == "air_quality" & data_type == "indicator",
+       select = c(id, wri_dimension, data_type))
 
-# Search layer ids by name pattern
-catalog_df[grepl("surface_water|asthma", catalog_df$id), c("id", "wri_domain", "data_type")]
+# Search by name pattern
+catalog_df[grepl("surface_water|asthma", catalog_df$id),
+           c("id", "wri_domain", "data_type")]
 ```
 
-Use `layer_info()` when you want the full metadata for a single layer:
+`layer_info()` returns full metadata for a single layer:
 
 ```{r layer-info}
 layer_info("water_status_surface_water_quantity")
 ```
 
-Use `query_stac_flexible()` when you want to filter the underlying STAC items by
-property values. `wri_overview()$data$items` stores wrapped entries, so unwrap
-the raw STAC item objects first:
+`query_stac_flexible()` filters the underlying STAC items by property:
 
 ```{r query-stac}
 stac_items <- lapply(catalog$data$items, function(x) x$item)
 
-water_indicator_items <- query_stac_flexible(
-  stac_items,
-  wri_domain = "water",
-  data_type = "indicator"
-)
-
-vapply(water_indicator_items, function(x) x$id, character(1))
+water_items <- query_stac_flexible(stac_items,
+                                   wri_domain = "water",
+                                   data_type  = "indicator")
+vapply(water_items, function(x) x$id, character(1))
 ```
 
-## Step 3: Retrieve and Plot Data
+---
 
-### Example 1: Get the Full WRI Score Layer
+## Step 3: Input Validation Helpers
 
-```{r get-layer-full}
-# Returns a SpatRaster pointing at the hosted COG
-t_full <- system.time({
-  wri_full <- get_layer("WRI_score")
-})
+Both `normalize_crs()` and `resolve_to_bbox()` return a length-1 logical
+with attributes — they never throw. Inspect `isTRUE()` to branch on
+success/failure, and `attr(result, "message")` on failure.
+
+---
+
+### `normalize_crs()` — Canonicalize a CRS specification
+
+Accepts integer EPSG codes, `"EPSG:XXXX"` strings, bare numeric strings,
+PROJ strings, and WKT.
+
+```{r normalize-valid}
+# Integer EPSG code
+r_int <- normalize_crs(4326)
+isTRUE(r_int);  attr(r_int, "crs")
+
+# "EPSG:XXXX" string
+r_str <- normalize_crs("EPSG:4326")
+isTRUE(r_str);  attr(r_str, "crs")
+
+# Bare numeric string (auto-prefixed)
+r_bare <- normalize_crs("32611")
+isTRUE(r_bare);  attr(r_bare, "crs")
+
+# NULL is a valid no-op
+r_null <- normalize_crs(NULL)
+isTRUE(r_null)
+```
+
+```{r normalize-invalid}
+# ── EDGE CASE: unrecognized CRS string ─────────────────────────────────────
+r_bad <- normalize_crs("not-a-crs")
+isTRUE(r_bad)
+attr(r_bad, "message")
+```
+
+---
+
+### `resolve_to_bbox()` — Extract a bbox from any spatial input
+
+---
+
+#### Input type: numeric vector `c(xmin, ymin, xmax, ymax)`
+
+A CRS must always be supplied explicitly for numeric input.
+
+```{r resolve-numeric}
+res_num <- resolve_to_bbox(c(-118.2, 34.1, -117.9, 34.3),
+                           aoi_crs = "EPSG:4326")
+isTRUE(res_num)
+attr(res_num, "bbox")
+attr(res_num, "crs")
+```
+
+---
+
+#### Input type: shapefile path (`.shp`)
+
+CRS is read from the `.prj` sidecar; `aoi_crs` must be omitted.
+
+```{r resolve-shp}
+# Source: LA County Open Data — Eaton Fire Perimeter
+res_shp <- resolve_to_bbox(shp_path)
+isTRUE(res_shp)
+attr(res_shp, "bbox")
+attr(res_shp, "crs")
+```
+
+---
+
+#### Input type: GeoJSON path (`.geojson`)
+
+```{r resolve-geojson}
+# Source: LA County Open Data — Eaton Fire Perimeter
+res_gjson <- resolve_to_bbox(gjson_path)
+isTRUE(res_gjson)
+attr(res_gjson, "bbox")
+attr(res_gjson, "crs")
+```
+
+---
+
+#### Input type: `sf` object
+
+```{r resolve-sf}
+# eaton_sf loaded above via sf::st_read(); CRS is embedded — omit aoi_crs
+res_sf <- resolve_to_bbox(eaton_sf)
+isTRUE(res_sf)
+attr(res_sf, "bbox")
+```
+
+---
+
+#### Input type: `terra::SpatVector`
+
+```{r resolve-spatvector}
+# eaton_vect loaded above via terra::vect(); CRS is embedded — omit aoi_crs
+res_vect <- resolve_to_bbox(eaton_vect)
+isTRUE(res_vect)
+attr(res_vect, "bbox")
+```
+
+---
+
+#### Input type: `terra::SpatExtent`
+
+`SpatExtent` objects carry no CRS, so `aoi_crs` is always required.
+
+```{r resolve-spatextent}
+# eaton_ext derived from eaton_vect above (terra::ext strips the CRS)
+res_ext <- resolve_to_bbox(eaton_ext, aoi_crs = "EPSG:4326")
+isTRUE(res_ext)
+attr(res_ext, "bbox")
+```
+
+---
+
+## Step 4: Retrieve and Plot Data with `get_layer()`
+
+`get_layer(id, aoi, aoi_crs)` accepts the same AOI inputs as
+`resolve_to_bbox()`. All reprojection from the AOI CRS to the raster's
+native CRS is handled internally.
+
+---
+
+#### Input type: `aoi = NULL` — full global layer
+
+```{r get-full}
+t_full <- system.time(wri_full <- get_layer("WRI_score"))
 t_full
+# Plotting the full extent is slow; left commented out.
+# plot(wri_full, main = "WRI Score — Full Extent",
+#      col = hcl.colors(100, "YlOrRd", rev = TRUE))
 ```
 
-```{r plot-layer-full}
-# Plotting the full layer can take a while, so it is left commented out.
-#plot(wri_full,
-#     main = "WRI Score - Full Extent",
-#     col = hcl.colors(100, "YlOrRd", rev = TRUE))
-```
+---
 
-### Example 2: Get WRI Score for Northern California
+#### Input type: numeric bbox + explicit CRS
 
-```{r get-layer-bbox}
-# Bounding boxes use c(xmin, ymin, xmax, ymax) in the supplied CRS.
+```{r get-bbox}
 bbox_norcal <- c(-122, 37, -121, 38)
 
-t_norcal <- system.time({
-  wri_norcal <- get_layer("WRI_score", bbox = bbox_norcal)
-})
-t_norcal
+t_num <- system.time(
+  wri_norcal <- get_layer("WRI_score",
+                           aoi     = bbox_norcal,
+                           aoi_crs = "EPSG:4326")
+)
+t_num
 ```
 
-```{r plot-layer-bbox}
+```{r plot-bbox}
 plot(wri_norcal,
-     main = "WRI Score - Northern California",
-     col = hcl.colors(100, "YlOrRd", rev = TRUE))
+     main = "WRI Score — Northern California (numeric bbox)",
+     col  = hcl.colors(100, "YlOrRd", rev = TRUE))
 ```
 
-### Example 3: Retrieve a Specific Indicator Layer
+---
 
-```{r get-layer-indicator}
+#### Input type: shapefile path
+
+```{r get-shp}
+# Source: LA County Open Data — Eaton Fire Perimeter
+t_shp <- system.time(
+  wri_shp <- get_layer("WRI_score", aoi = shp_path)
+)
+t_shp
+```
+
+```{r plot-shp}
+plot(wri_shp,
+     main = "WRI Score — Eaton Fire Area (shapefile path)",
+     col  = hcl.colors(100, "YlOrRd", rev = TRUE))
+```
+
+---
+
+#### Input type: GeoJSON path
+
+```{r get-geojson}
+# Source: LA County Open Data — Eaton Fire Perimeter
+t_gjson <- system.time(
+  wri_gjson <- get_layer("WRI_score", aoi = gjson_path)
+)
+t_gjson
+```
+
+```{r plot-geojson}
+plot(wri_gjson,
+     main = "WRI Score — Eaton Fire Area (GeoJSON path)",
+     col  = hcl.colors(100, "YlOrRd", rev = TRUE))
+```
+
+---
+
+#### Input type: `sf` object
+
+```{r get-sf}
+t_sf <- system.time(
+  wri_sf <- get_layer("WRI_score", aoi = eaton_sf)
+)
+t_sf
+```
+
+---
+
+#### Input type: `terra::SpatVector`
+
+```{r get-spatvector}
 indicator_id <- "water_status_surface_water_quantity"
 
-t_indicator <- system.time({
-  water_quantity_norcal <- get_layer(indicator_id, bbox = bbox_norcal)
-})
-t_indicator
+t_vect <- system.time(
+  water_qty <- get_layer(indicator_id, aoi = eaton_vect)
+)
+t_vect
 ```
 
-```{r plot-layer-indicator}
-plot(water_quantity_norcal,
-     main = "Surface Water Quantity - Northern California",
-     col = hcl.colors(100, "YlOrRd", rev = TRUE))
+```{r plot-spatvector}
+plot(water_qty,
+     main = "Surface Water Quantity — Eaton Fire Area (SpatVector)",
+     col  = hcl.colors(100, "YlOrRd", rev = TRUE))
 ```
+
+---
+
+#### Input type: `terra::SpatExtent`
+
+```{r get-spatextent}
+t_ext <- system.time(
+  wri_ext <- get_layer("WRI_score",
+                        aoi     = eaton_ext,
+                        aoi_crs = "EPSG:4326")
+)
+t_ext
+```
+
+---
+
+## Step 5: Edge Cases — Validation Failures, Warnings, and Errors
+
+These examples demonstrate the guard-rail behavior of each function. None of
+the cells below crash the document: validation-failure cells return `FALSE`
+with an informative message, and error-triggering calls are wrapped in
+`tryCatch`.
+
+---
+
+### Validation failures — `normalize_crs()`
+
+```{r edge-normalize}
+# ── Unrecognized CRS ───────────────────────────────────────────────────────
+r <- normalize_crs("EPSG:999999999")   # valid format, invalid code
+isTRUE(r);  attr(r, "message")
+```
+
+---
+
+### Validation failures — `resolve_to_bbox()`
+
+```{r edge-resolve-no-crs}
+# ── Numeric bbox without aoi_crs ───────────────────────────────────────────
+# get_layer would forward the same error here; resolve_to_bbox catches it early
+r <- resolve_to_bbox(c(-118.2, 34.1, -117.9, 34.3))
+isTRUE(r);  attr(r, "message")
+```
+
+```{r edge-resolve-crs-conflict}
+# ── aoi_crs supplied when the object already carries a CRS ─────────────────
+# sf objects embed their CRS; passing aoi_crs too is ambiguous and rejected
+r <- resolve_to_bbox(eaton_sf, aoi_crs = "EPSG:4326")
+isTRUE(r);  attr(r, "message")
+```
+
+```{r edge-resolve-extent-no-crs}
+# ── SpatExtent without aoi_crs ─────────────────────────────────────────────
+# SpatExtent strips the CRS; aoi_crs is mandatory
+r <- resolve_to_bbox(eaton_ext)
+isTRUE(r);  attr(r, "message")
+```
+
+---
+
+### Error — invalid layer id
+
+```{r edge-bad-id}
+# ── Layer id not in catalog → stop() ───────────────────────────────────────
+tryCatch(
+  get_layer("this_layer_does_not_exist"),
+  error = function(e) cat("Error:", conditionMessage(e), "\n")
+)
+```
+
+---
+
+### Warning — bbox partially overlaps the layer extent
+
+When the requested bbox extends beyond the layer's footprint, `get_layer`
+emits a warning describing which sides overflow and then crops to the
+available intersection. The result is still returned.
+
+```{r edge-partial-overlap, warning=TRUE}
+# ── Bbox that extends beyond the layer's western/eastern/northern boundary ──
+# get_layer emits a warning describing which sides overflow, then crops to
+# the available intersection and returns the raster normally.
+bbox_overflow <- c(-130, 30, -55, 55)   # well beyond the contiguous US
+
+wri_overflow <- get_layer("WRI_score",
+                           aoi     = bbox_overflow,
+                           aoi_crs = "EPSG:4326")
+```
+
+---
+
+### Error — bbox has no overlap with the layer extent
+
+```{r edge-no-overlap}
+# ── Bbox entirely outside the layer → stop() ───────────────────────────────
+# Antarctica is far outside any US-only or regional WRI layer
+bbox_antarctica <- c(-80, -90, -60, -70)
+
+tryCatch(
+  get_layer("WRI_score", aoi = bbox_antarctica, aoi_crs = "EPSG:4326"),
+  error = function(e) cat("Error:", conditionMessage(e), "\n")
+)
+```
+
+---
 
 ## Summary
 
-1. Explore the catalog with `wri_overview()` and `wri_overview_df()`.
-2. Filter layers with base R, `layer_info()`, and `query_stac_flexible()`.
-3. Retrieve hosted rasters with `get_layer(id, bbox = ...)`.
+| Step | Function(s) | Purpose |
+|------|------------|---------|
+| 1 | `wri_overview()`, `wri_overview_df()` | Browse the catalog |
+| 2 | `layer_info()`, `query_stac_flexible()` | Inspect layer metadata |
+| 3 | `normalize_crs()`, `resolve_to_bbox()` | Validate inputs before fetching |
+| 4 | `get_layer(id, aoi, aoi_crs)` | Stream a hosted raster, optionally cropped |
+| 5 | — | Edge cases: validation failures, partial-overlap warnings, no-overlap errors |
 
+**`aoi` input types accepted by `resolve_to_bbox()` and `get_layer()`:**
+
+| Type | `aoi_crs` required? |
+|------|---------------------|
+| `NULL` (full layer) | — |
+| Numeric `c(xmin, ymin, xmax, ymax)` | Yes |
+| Shapefile path (`.shp`) | No (read from `.prj`) |
+| GeoJSON path (`.geojson`) | No (embedded in file) |
+| `sf` / `sfc` object | No (embedded in object) |
+| `terra::SpatVector` | No (embedded in object) |
+| `terra::SpatExtent` | Yes (CRS is stripped by terra) |

@@ -5,7 +5,7 @@ Get a WRI raster layer
 ## Usage
 
 ``` r
-get_layer(id, bbox = NULL, crs = "EPSG:4326")
+get_layer(id, aoi = NULL, aoi_crs = NULL)
 ```
 
 ## Arguments

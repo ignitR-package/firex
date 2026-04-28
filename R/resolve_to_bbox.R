@@ -52,8 +52,10 @@ resolve_to_bbox <- function(aoi, aoi_crs = NULL) {
 
     # Coerce to terra
     spat_obj <- tryCatch({
-        # if aoi is SpatVect, SpatRast, or SpatExt, pass aoi as-is
-        if (inherits(aoi, c("SpatVector", "SpatRaster", "SpatExtent"))) aoi
+        if (inherits(aoi, c("SpatVector", "SpatRaster"))) aoi
+        # SpatExtent is a bbox struct, not a geometry feature so terra::vect() and crs assignment
+        # don't work on it directly, as.polygons() converts it to a spatial object
+        else if (inherits(aoi, "SpatExtent")) terra::as.polygons(aoi)
         else terra::vect(aoi)
     }, error = function(e) NULL)
 
@@ -89,7 +91,6 @@ resolve_to_bbox <- function(aoi, aoi_crs = NULL) {
 
     # If object has no crs and crs provided
     if (!has_crs) {
-        # Assign crs w terra
         terra::crs(spat_obj) <- aoi_crs
     }
 

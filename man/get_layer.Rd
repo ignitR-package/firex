@@ -4,7 +4,7 @@
 \alias{get_layer}
 \title{Get a WRI raster layer}
 \usage{
-get_layer(id, bbox = NULL, crs = "EPSG:4326")
+get_layer(id, aoi = NULL, aoi_crs = NULL)
 }
 \arguments{
 \item{id}{Character. Layer id to retrieve.}

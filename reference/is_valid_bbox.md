@@ -38,7 +38,7 @@ is_valid_bbox(c(-120, 34, -119, 35))  # TRUE
 is_valid_bbox(c(-119, 34, -120, 35))  # FALSE
 #> [1] FALSE
 #> attr(,"message")
-#> [1] "You supplied bbox = c(xmin = -119, ymin = 34, xmax = -120, ymax = 35). `xmin` must be less than `xmax`."
+#> [1] "You supplied bbox = c(xmin = -119, ymin = 34, xmax = -120, ymax = 35). `xmin` must be less than `xmax`. "
 #> attr(,"status")
 #> [1] "invalid"
 #> attr(,"bbox")

@@ -41,7 +41,8 @@ gjson_path <- file.path(data_dir, "Eaton_Fire_Perimeter.geojson")
 # Pre-load as in-memory objects for the input-type examples below
 eaton_sf   <- sf::st_read(shp_path,   quiet = TRUE)
 eaton_vect <- terra::vect(shp_path)
-eaton_ext  <- terra::ext(eaton_vect)   # SpatExtent (no embedded CRS)
+eaton_crs  <- terra::crs(eaton_vect)  # capture CRS before ext() strips it
+eaton_ext  <- terra::ext(eaton_vect)  # SpatExtent (no embedded CRS)
 ```
 
 ---
@@ -221,7 +222,8 @@ attr(res_vect, "bbox")
 
 ```{r resolve-spatextent}
 # eaton_ext derived from eaton_vect above (terra::ext strips the CRS)
-res_ext <- firex:::resolve_to_bbox(eaton_ext, aoi_crs = "EPSG:4326")
+# use eaton_crs captured in setup — the shapefile is not necessarily WGS84
+res_ext <- firex:::resolve_to_bbox(eaton_ext, aoi_crs = eaton_crs)
 isTRUE(res_ext)
 attr(res_ext, "bbox")
 ```
@@ -341,7 +343,7 @@ plot(water_qty,
 t_ext <- system.time(
   wri_ext <- get_layer("WRI_score",
                         aoi     = eaton_ext,
-                        aoi_crs = "EPSG:4326")
+                        aoi_crs = eaton_crs)
 )
 t_ext
 ```

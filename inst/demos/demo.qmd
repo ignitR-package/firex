@@ -122,7 +122,9 @@ The function returns a `SpatRaster` (from the `terra` package).
 ### No AOI - full layer
 
 Omit `aoi` to retrieve the full global extent of a layer. This can be slow
-to plot, so the plot call is commented out.
+to plot, so the plot call is commented out. The `get_layer()` call itself is
+usually fast here because `terra` opens the remote COG lazily and only reads
+header metadata until you actually crop, plot, or extract values.
 
 ```{r get-full}
 wri_full <- get_layer("WRI_score")
@@ -137,7 +139,10 @@ wri_full <- get_layer("WRI_score")
 ### AOI type 1: numeric bounding box
 
 Pass a vector `c(xmin, ymin, xmax, ymax)` as the `aoi`. You must also supply
-`aoi_crs` to tell the function what coordinate system those numbers are in.
+`aoi_crs` to tell the function what coordinate system those numbers are in. The
+returned object keeps a lazy window on the remote COG, so the call itself is
+usually fast and the real read happens when you plot, extract values, or write
+the raster.
 
 ```{r get-bbox}
 wri_norcal <- get_layer("WRI_score",
@@ -298,11 +303,12 @@ tryCatch(
 ### Warning: AOI partially overlaps the layer extent
 
 If the AOI extends beyond the edge of the layer, `get_layer()` issues a
-warning naming which sides overflow, then crops to the available area and
-returns the result normally.
+warning naming which sides overflow, then intersects the request with the
+available area and returns the result normally.
 
 ```{r warn-partial-overlap, warning=TRUE}
-# This bbox extends well beyond the contiguous US
+# This bbox covers most of the contiguous US. The object returns quickly,
+# but plotting or extracting values from it can still take a while.
 wri_overflow <- get_layer("WRI_score",
                            aoi     = c(-130, 30, -55, 55),
                            aoi_crs = "EPSG:4326")

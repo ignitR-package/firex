@@ -33,7 +33,7 @@ Both files are bundled in `inst/demos/data/` and loaded via `system.file()`.
 # devtools::install_github("ignitR-package/firex")
 
 # Or load from source during development:
-# devtools::load_all()
+devtools::load_all()
 
 library(firex)
 library(terra)
@@ -68,8 +68,11 @@ head(catalog_df[, c("id", "wri_domain", "wri_dimension", "data_type", "is_hosted
 
 ```{r explore-categories}
 # See all available domains, dimensions, and data types
+cat("Domains: \n")
 sort(unique(catalog_df$wri_domain))
+cat("\nDimensions: \n")
 sort(unique(catalog_df$wri_dimension))
+cat("\nData Types: \n")
 sort(unique(catalog_df$data_type))
 ```
 
@@ -92,7 +95,7 @@ catalog_df[grepl("surface_water|asthma", catalog_df$id),
 Use `layer_info()` to inspect the full metadata for a single layer:
 
 ```{r layer-info}
-layer_info("water_status_surface_water_quantity")
+t(layer_info("water_status_surface_water_quantity"))
 ```
 
 Use `query_stac_flexible()` to filter the underlying STAC items directly by
@@ -204,11 +207,11 @@ also shows using a different layer ID.
 
 ```{r get-spatvector}
 # eaton_vect was loaded in setup via terra::vect()
-water_qty <- get_layer("water_status_surface_water_quantity",
+water_qty <- get_layer("infrastructure_resistance",
                         aoi = eaton_vect)
 
 plot(water_qty,
-     main = "Surface Water Quantity - Eaton Fire Area (SpatVector)",
+     main = "Infrastructure Resistance - Eaton Fire Area (SpatVector)",
      col  = hcl.colors(100, "YlOrRd", rev = TRUE))
 ```
 

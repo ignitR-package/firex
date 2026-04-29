@@ -6,4 +6,4 @@
 ^docs$
 ^pkgdown$
 ^\.github$
-^merge_issue_log\.md$
+^integration_milestones\.md$

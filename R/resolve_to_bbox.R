@@ -84,11 +84,13 @@ resolve_to_bbox <- function(aoi, aoi_crs = NULL) {
 
     # If object has a CRS and a conflicting CRS was also provided
     if (has_crs && !is.null(aoi_crs)) {
-        if (!terra::same.crs(spat_obj, aoi_crs)) {
+        object_crs <- terra::crs(spat_obj)
+
+        if (!terra::same.crs(object_crs, aoi_crs)) {
             return(.make_result(
                 FALSE,
                 message = paste0(
-                    "`aoi` already has CRS '", terra::crs(spat_obj), "'. ",
+                    "`aoi` already has CRS '", object_crs, "'. ",
                     "It does not match `aoi_crs = ", aoi_crs, "`. ",
                     "Remove `aoi_crs` or supply a matching CRS."
                 )

@@ -47,10 +47,10 @@ check_extent_overlap <- function(bbox, layer_bbox) {
     )
 
     side_labels <- c(
-      west = "west (left)",
-      south = "south (bottom)",
-      east = "east (right)",
-      north = "north (top)"
+      west = "west",
+      south = "south",
+      east = "east",
+      north = "north"
     )
 
     side_text <- paste(unname(side_labels[names(outside_sides)[outside_sides]]), collapse = ", ")

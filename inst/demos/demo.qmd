@@ -33,7 +33,7 @@ Both files are bundled in `inst/demos/data/` and loaded via `system.file()`.
 # devtools::install_github("ignitR-package/firex")
 
 # Or load from source during development:
-# devtools::load_all()
+devtools::load_all()
 
 library(firex)
 library(terra)
@@ -50,8 +50,6 @@ eaton_vect <- terra::vect(shp_path)                  # SpatVector
 eaton_crs  <- terra::crs(eaton_vect)                 # save CRS before ext() drops it
 eaton_ext  <- terra::ext(eaton_vect)                 # SpatExtent (no CRS attached)
 ```
-
----
 
 ## Part 1: Browse the Catalog
 
@@ -92,7 +90,7 @@ catalog_df[grepl("surface_water|asthma", catalog_df$id),
 Use `layer_info()` to inspect the full metadata for a single layer:
 
 ```{r layer-info}
-layer_info("water_status_surface_water_quantity")
+t(layer_info("water_status_surface_water_quantity"))
 ```
 
 Use `query_stac_flexible()` to filter the underlying STAC items directly by
@@ -129,9 +127,9 @@ header metadata until you actually crop, plot, or extract values.
 ```{r get-full}
 wri_full <- get_layer("WRI_score")
 
-# plot(wri_full,
-#      main = "WRI Score - Full Extent",
-#      col  = hcl.colors(100, "YlOrRd", rev = TRUE))
+plot(wri_full,
+     main = "WRI Score - Full Extent",
+     col  = hcl.colors(100, "YlOrRd", rev = TRUE))
 ```
 
 ---
@@ -209,11 +207,11 @@ also shows using a different layer ID.
 
 ```{r get-spatvector}
 # eaton_vect was loaded in setup via terra::vect()
-water_qty <- get_layer("water_status_surface_water_quantity",
+water_qty <- get_layer("infrastructure_resistance",
                         aoi = eaton_vect)
 
 plot(water_qty,
-     main = "Surface Water Quantity - Eaton Fire Area (SpatVector)",
+     main = "Infrastructure Resistance - Eaton Fire Area (SpatVector)",
      col  = hcl.colors(100, "YlOrRd", rev = TRUE))
 ```
 

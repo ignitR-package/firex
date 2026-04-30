@@ -106,7 +106,7 @@ get_layer <- function(id, aoi = NULL, aoi_crs = NULL) {
 
     # extract layer bbox (in EPSG:4326)
     layer_bbox <- c(layer$xmin[1], layer$ymin[1], layer$xmax[1], layer$ymax[1])
-    
+
     if (anyNA(layer_bbox)) {
       stop("Layer extent metadata is missing for layer '", id, "'.", call. = FALSE)
     }
@@ -139,6 +139,12 @@ get_layer <- function(id, aoi = NULL, aoi_crs = NULL) {
 
       # Project the user bbox to the raster CRS and apply it as a lazy window.
       bbox_projected <- terra::project(bbox_ext, from = "EPSG:4326", to = terra::crs(rast))
+
+
+      #bbox_proj <- terra::as.poly...(aoi, crs)
+      #terra::crop(rast, bbox_proj)
+
+
       terra::window(rast) <- bbox_projected
     }
 

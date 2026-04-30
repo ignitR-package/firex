@@ -106,6 +106,8 @@ resolve_to_bbox <- function(aoi, aoi_crs = NULL) {
     # Attempt to extract extent
     extent <- terra::ext(spat_obj)
 
+    # Change to spat obj with crs
+
     # Check for 0 area
     if ((extent$xmin == extent$xmax && extent$ymin == extent$ymax) || terra::is.empty(extent)) {
         return(.make_result(

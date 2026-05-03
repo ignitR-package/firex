@@ -22,6 +22,7 @@ workflows.
 ## Example Usage
 
 ``` r
+
 library(firex)
 
 # Browse the catalog — see all domains, dimensions, and available layers

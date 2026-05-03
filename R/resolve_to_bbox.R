@@ -53,6 +53,7 @@ resolve_to_bbox <- function(aoi, aoi_crs = NULL) {
     # Coerce to terra
     spat_obj <- tryCatch({
         if (inherits(aoi, c("SpatVector", "SpatRaster"))) aoi
+
         # SpatExtent is a bbox struct, not a geometry feature so terra::vect() and crs assignment
         # don't work on it directly, as.polygons() converts it to a spatial object
         else if (inherits(aoi, "SpatExtent")) terra::as.polygons(aoi)
@@ -81,12 +82,20 @@ resolve_to_bbox <- function(aoi, aoi_crs = NULL) {
         ))
     }
 
-    # If object has crs and different crs provided
+    # If object has a CRS and a conflicting CRS was also provided
     if (has_crs && !is.null(aoi_crs)) {
-        return(.make_result(
-            FALSE,
-            message = "`aoi` already has a CRS. Either remove `aoi_crs` or strip the CRS from `aoi`."
-        ))
+        object_crs <- terra::crs(spat_obj)
+
+        if (!terra::same.crs(object_crs, aoi_crs)) {
+            return(.make_result(
+                FALSE,
+                message = paste0(
+                    "`aoi` already has CRS '", object_crs, "'. ",
+                    "It does not match `aoi_crs = ", aoi_crs, "`. ",
+                    "Remove `aoi_crs` or supply a matching CRS."
+                )
+            ))
+        }
     }
 
     # If object has no crs and crs provided
@@ -97,8 +106,10 @@ resolve_to_bbox <- function(aoi, aoi_crs = NULL) {
     # Attempt to extract extent
     extent <- terra::ext(spat_obj)
 
+    # Change to spat obj with crs
+
     # Check for 0 area
-    if ((extent$xmin == extent$xmax && extent$ymin == extent$ymax) || is.empty(extent)) {
+    if ((extent$xmin == extent$xmax && extent$ymin == extent$ymax) || terra::is.empty(extent)) {
         return(.make_result(
             FALSE,
             message = "`aoi` is empty or a single point. Provide an object with area, multiple points, or a line."

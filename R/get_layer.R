@@ -106,7 +106,7 @@ get_layer <- function(id, aoi = NULL, aoi_crs = NULL) {
 
     # extract layer bbox (in EPSG:4326)
     layer_bbox <- c(layer$xmin[1], layer$ymin[1], layer$xmax[1], layer$ymax[1])
-    
+
     if (anyNA(layer_bbox)) {
       stop("Layer extent metadata is missing for layer '", id, "'.", call. = FALSE)
     }
@@ -130,22 +130,22 @@ get_layer <- function(id, aoi = NULL, aoi_crs = NULL) {
   vsi_path <- paste0("/vsicurl/", href)
 
   tryCatch({
-
     rast <- terra::rast(vsi_path)
 
     if (!is.null(bbox)) {
 
       # extract spatial extent of user bbox
       bbox_ext <- terra::ext(bbox[1], bbox[3], bbox[2], bbox[4])
-      
-      # project user bbox to match raster crs (5070)
+
+      # Project the user bbox to the raster CRS and apply it as a lazy window.
       bbox_projected <- terra::project(bbox_ext, from = "EPSG:4326", to = terra::crs(rast))
 
-      # convert projected bbox to a SpatVector polygon for cropping
-      bbox_vect <- terra::as.polygons(bbox_projected, crs = terra::crs(rast))
 
-      # crop the raster to the projected bbox
-      rast <- terra::crop(rast, bbox_vect)
+      #bbox_proj <- terra::as.poly...(aoi, crs)
+      #terra::crop(rast, bbox_proj)
+
+
+      terra::window(rast) <- bbox_projected
     }
 
     rast
@@ -159,4 +159,3 @@ get_layer <- function(id, aoi = NULL, aoi_crs = NULL) {
     )
   })
 }
-

@@ -39,18 +39,19 @@ is_valid_bbox <- function(bbox, crs = "EPSG:4326") {
     ))
   }
 
-  # If the CRS is not EPSG:4326, attempt to reproject the bbox into a polygon 
-  # with the provided CRS to prepare for reprojection
-  if (!identical(toupper(crs), "EPSG:4326")) {
+  original_bbox <- bbox
+  was_reprojected <- !identical(toupper(crs), "EPSG:4326")
+
+  # If the CRS is not EPSG:4326, reproject to EPSG:4326 for validation
+  if (was_reprojected) {
     bbox_poly <- tryCatch(
       terra::as.polygons(
         terra::ext(bbox[1], bbox[3], bbox[2], bbox[4]),
         crs = crs
-        ),
+      ),
       error = function(e) NULL
     )
-    
-    # If conversion to polygon fails, return an invalid result
+
     if (is.null(bbox_poly)) {
       return(.make_result(
         FALSE,
@@ -59,13 +60,11 @@ is_valid_bbox <- function(bbox, crs = "EPSG:4326") {
       ))
     }
 
-    # Attempt to reproject to EPSG:4326 for validation
     bbox_poly <- tryCatch(
       terra::project(bbox_poly, "EPSG:4326"),
       error = function(e) NULL
     )
 
-    # If reprojection fails, return an invalid result
     if (is.null(bbox_poly)) {
       return(.make_result(
         FALSE,
@@ -74,7 +73,6 @@ is_valid_bbox <- function(bbox, crs = "EPSG:4326") {
       ))
     }
 
-    # Extract the reprojected bbox coordinates
     bbox_ext <- terra::ext(bbox_poly)
     bbox <- c(bbox_ext$xmin, bbox_ext$ymin, bbox_ext$xmax, bbox_ext$ymax)
   }
@@ -85,10 +83,23 @@ is_valid_bbox <- function(bbox, crs = "EPSG:4326") {
   ymax <- bbox[4]
   bbox_label <- format_bbox(bbox)
 
+  # When a non-WGS84 bbox was reprojected, append a note so the user knows the
+  # values shown are WGS84 and what their original input was
+  reproject_note <- if (was_reprojected) {
+    paste0(
+      "(These are your coordinates reprojected to WGS84 from '", crs, "'. ",
+      "Your original values were c(",
+      "xmin = ", original_bbox[1], ", ",
+      "ymin = ", original_bbox[2], ", ",
+      "xmax = ", original_bbox[3], ", ",
+      "ymax = ", original_bbox[4], ").)"
+    )
+  } else ""
+
   if (xmin >= xmax) {
     return(.make_result(
       FALSE,
-      paste0(bbox_label, "`xmin` must be less than `xmax`."),
+      paste0(bbox_label, "`xmin` must be less than `xmax`. ", reproject_note),
       "invalid",
       bbox
     ))
@@ -97,7 +108,7 @@ is_valid_bbox <- function(bbox, crs = "EPSG:4326") {
   if (ymin >= ymax) {
     return(.make_result(
       FALSE,
-      paste0(bbox_label, "`ymin` must be less than `ymax`."),
+      paste0(bbox_label, "`ymin` must be less than `ymax`. ", reproject_note),
       "invalid",
       bbox
     ))
@@ -108,7 +119,8 @@ is_valid_bbox <- function(bbox, crs = "EPSG:4326") {
       FALSE,
       paste0(
         bbox_label,
-        "`xmin` and `xmax` must be between -180 and 180."
+        "`xmin` and `xmax` must be between -180 and 180. ",
+        reproject_note
       ),
       "invalid",
       bbox
@@ -120,7 +132,8 @@ is_valid_bbox <- function(bbox, crs = "EPSG:4326") {
       FALSE,
       paste0(
         bbox_label,
-        "`ymin` and `ymax` must be between -90 and 90."
+        "`ymin` and `ymax` must be between -90 and 90. ",
+        reproject_note
       ),
       "invalid",
       bbox

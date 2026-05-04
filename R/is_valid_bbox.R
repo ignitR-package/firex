@@ -39,17 +39,17 @@ is_valid_bbox <- function(bbox, crs = "EPSG:4326") {
     ))
   }
 
-  # If the CRS is not EPSG:4326, attempt to reproject the bbox into a polygon 
+  # If the CRS is not EPSG:4326, attempt to reproject the bbox into a polygon
   # with the provided CRS to prepare for reprojection
   if (!identical(toupper(crs), "EPSG:4326")) {
     bbox_poly <- tryCatch(
       terra::as.polygons(
-        terra::ext(bbox[1], bbox[3], bbox[2], bbox[4]),
+        terra::ext(bbox[1], bbox[3], bbox[2], bbox[4]),# incorrect converting from unstandered lat lon formatt incorrect order undebug(is_valid) example to write a unit test on making sure bbox returns the right dementions
         crs = crs
         ),
       error = function(e) NULL
     )
-    
+
     # If conversion to polygon fails, return an invalid result
     if (is.null(bbox_poly)) {
       return(.make_result(

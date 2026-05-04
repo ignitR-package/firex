@@ -1,32 +1,82 @@
 #' Get a WRI raster layer
 #'
-#' @param id Character. Layer id to retrieve.
-#' @param bbox Numeric vector `c(xmin, ymin, xmax, ymax)` in the supplied
-#'   `crs`. If `NULL`, returns the full layer.
-#' @param crs Character. Coordinate reference system of `bbox`. Defaults to
-#'   `"EPSG:4326"`.
+#' Retrieves a hosted WRI raster asset and optionally crops it to a spatial
+#' area of interest. The area of interest can be supplied in several formats:
+#' a numeric bounding box, a file path to a shapefile or GeoJSON, an
+#' \code{sf} object, or a \code{terra} spatial object
+#' (\code{SpatVector}, \code{SpatRaster}, or \code{SpatExtent}).
 #'
-#' @returns A `terra::SpatRaster`.
+#' @param id Character. Layer id to retrieve. See \code{\link{wri_overview_df}}
+#'   for available ids.
+#' @param aoi Area of interest used to crop the layer. Accepted inputs:
+#'   \itemize{
+#'     \item \code{NULL} — returns the full global layer (default).
+#'     \item Numeric vector \code{c(xmin, ymin, xmax, ymax)} — bounding box;
+#'       \code{aoi_crs} is required.
+#'     \item Character path to a shapefile (\code{.shp}) or GeoJSON file.
+#'     \item An \code{sf} or \code{sfc} object.
+#'     \item A \code{terra::SpatVector}, \code{terra::SpatRaster}, or
+#'       \code{terra::SpatExtent}.
+#'   }
+#' @param aoi_crs Character or integer CRS specification (e.g.
+#'   \code{"EPSG:4326"} or \code{4326}). Required when \code{aoi} is a
+#'   numeric bounding box or a CRS-less spatial object; must be omitted when
+#'   \code{aoi} already carries a CRS.
+#'
+#' @returns A \code{terra::SpatRaster} cropped to \code{aoi}, or the full
+#'   layer when \code{aoi = NULL}.
+#'
+#' @seealso \code{\link{resolve_to_bbox}}, \code{\link{normalize_crs}},
+#'   \code{\link{wri_overview_df}}
 #' @export
 #'
 #' @examples
 #' \dontrun{
-#' bbox <- c(-122, 37, -121, 38)
-#' rast <- get_layer("WRI_score", bbox = bbox)
+#' # Full layer
+#' wri <- get_layer("WRI_score")
+#'
+#' # Numeric bbox (WGS 84)
+#' wri_norcal <- get_layer("WRI_score",
+#'                         aoi     = c(-122, 37, -121, 38),
+#'                         aoi_crs = "EPSG:4326")
+#'
+#' # Shapefile path
+#' shp <- system.file("demos/data/Eaton_Perimeter_20250121.shp",
+#'                    package = "firex")
+#' wri_eaton <- get_layer("WRI_score", aoi = shp)
 #' }
-get_layer <- function(id, bbox = NULL, crs = "EPSG:4326") {
+get_layer <- function(id, aoi = NULL, aoi_crs = NULL) {
+  bbox <- NULL
+
   if (missing(id) || !is.character(id) || length(id) != 1 || !nzchar(id)) {
     stop("`id` must be a single non-empty character string.", call. = FALSE)
   }
 
-  if (!is.null(bbox)) {
-    bbox_check <- is_valid_bbox(bbox, crs)
+  if (!is.null(aoi)) {
 
-    if (!isTRUE(bbox_check)) {
-      stop(attr(bbox_check, "message"), call. = FALSE)
+    # Normalize crs if provided
+    if (!is.null(aoi_crs)) {
+
+      crs_check <- normalize_crs(aoi_crs)
+      if (!isTRUE(crs_check)) stop(attr(crs_check, "message"), call. = FALSE)
+
+      aoi_crs <- attr(crs_check, "crs")
     }
 
+    # Resolve input to bbox
+    aoi_check <- resolve_to_bbox(aoi, aoi_crs)
+
+    if (!isTRUE(aoi_check)) stop(attr(aoi_check, "message"), call. = FALSE)
+    bbox <- attr(aoi_check, "bbox")
+    bbox_crs <- attr(aoi_check, "crs")
+
+    # Validate bbox
+    bbox_check <- is_valid_bbox(bbox, bbox_crs)
+
+    if (!isTRUE(bbox_check)) stop(attr(bbox_check, "message"), call. = FALSE)
     bbox <- attr(bbox_check, "bbox")
+
+
   }
 
   # Get layer metadata (asset-level)
@@ -56,7 +106,7 @@ get_layer <- function(id, bbox = NULL, crs = "EPSG:4326") {
 
     # extract layer bbox (in EPSG:4326)
     layer_bbox <- c(layer$xmin[1], layer$ymin[1], layer$xmax[1], layer$ymax[1])
-    
+
     if (anyNA(layer_bbox)) {
       stop("Layer extent metadata is missing for layer '", id, "'.", call. = FALSE)
     }
@@ -80,22 +130,22 @@ get_layer <- function(id, bbox = NULL, crs = "EPSG:4326") {
   vsi_path <- paste0("/vsicurl/", href)
 
   tryCatch({
-
     rast <- terra::rast(vsi_path)
 
     if (!is.null(bbox)) {
 
       # extract spatial extent of user bbox
       bbox_ext <- terra::ext(bbox[1], bbox[3], bbox[2], bbox[4])
-      
-      # project user bbox to match raster crs (5070)
+
+      # Project the user bbox to the raster CRS and apply it as a lazy window.
       bbox_projected <- terra::project(bbox_ext, from = "EPSG:4326", to = terra::crs(rast))
 
-      # convert projected bbox to a SpatVector polygon for cropping
-      bbox_vect <- terra::as.polygons(bbox_projected, crs = terra::crs(rast))
 
-      # crop the raster to the projected bbox
-      rast <- terra::crop(rast, bbox_vect)
+      #bbox_proj <- terra::as.poly...(aoi, crs)
+      #terra::crop(rast, bbox_proj)
+
+
+      terra::window(rast) <- bbox_projected
     }
 
     rast
@@ -109,4 +159,3 @@ get_layer <- function(id, bbox = NULL, crs = "EPSG:4326") {
     )
   })
 }
-

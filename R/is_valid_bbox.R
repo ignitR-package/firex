@@ -46,7 +46,7 @@ is_valid_bbox <- function(bbox, crs = "EPSG:4326") {
   if (was_reprojected) {
     bbox_poly <- tryCatch(
       terra::as.polygons(
-        terra::ext(bbox[1], bbox[3], bbox[2], bbox[4]),
+        terra::ext(bbox[1], bbox[3], bbox[2], bbox[4]),# incorrect converting from unstandered lat lon formatt incorrect order undebug(is_valid) example to write a unit test on making sure bbox returns the right dementions
         crs = crs
         ),
       error = function(e) NULL

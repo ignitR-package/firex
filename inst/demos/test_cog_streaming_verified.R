@@ -25,19 +25,37 @@
 #   # Or source interactively in RStudio
 #
 # REQUIREMENTS:
-#   - terra, sf, httr packages
+#   - firex (or devtools for load_all), terra, sf, httr packages
 #   - Network access to the COG URL
 #
 # =============================================================================
+
+if (!"package:firex" %in% search()) {
+  if (requireNamespace("firex", quietly = TRUE)) {
+    library(firex)
+  } else if (requireNamespace("devtools", quietly = TRUE) && file.exists("DESCRIPTION")) {
+    devtools::load_all(".")
+  } else {
+    stop(
+      "Install 'firex' or run this script from the package root with 'devtools' available.",
+      call. = FALSE
+    )
+  }
+}
 
 library(terra)
 library(sf)
 library(httr)
 
 # --- CONFIG ---
-COG_URL <- "https://knb.ecoinformatics.org/data/WRI_score.tif"
+COG_LAYER_ID <- "WRI_score"
+COG_URL <- layer_info(COG_LAYER_ID)$asset_href[1]
 VSICURL_PATH <- paste0("/vsicurl/", COG_URL)  # GDAL virtual path for HTTP access
-OUTPUT_DIR <- here::here("inst", "demos", "test_cog_streaming_outputs")
+OUTPUT_DIR <- file.path("inst", "demos", "test_cog_streaming_outputs")
+dir.create(OUTPUT_DIR, recursive = TRUE, showWarnings = FALSE)
+
+cat("Using layer:", COG_LAYER_ID, "\n")
+cat("Resolved asset URL:", COG_URL, "\n\n")
 
 # GDAL environment settings to reduce unnecessary HTTP requests
 # EMPTY_DIR: don't try to list directory contents (no sidecar files to find)

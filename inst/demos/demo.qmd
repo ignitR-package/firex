@@ -1,142 +1,357 @@
 ---
-title: "fedex Package Demo"
+title: "firex Package Demo"
 format: html
 ---
 
-# Getting Started 
+# firex Package Demo
 
-This demo shows how to explore, query, and retrieve WRI data using the `fedex` package.
+This document demonstrates the core capabilities of the `firex` package:
+browsing available WRI Aqueduct layers, retrieving raster data, and the
+range of spatial input types that `get_layer()` accepts. It also shows how
+the package handles common CRS problems with clear error messages.
+
+Chunks can be run individually. The setup chunk below must be run first to
+load packages and prepare the demo data objects.
+
+## Data Sources
+
+The spatial examples below use Eaton Fire perimeter data from LA County Open Data.
+
+| File | Format | Source |
+|------|--------|--------|
+| `Eaton_Perimeter_20250121.shp` | Shapefile | [LA County Open Data - Eaton Fire Perimeter](https://data.lacounty.gov/datasets/lacounty::eaton-fire-perimeter/about) |
+| `Eaton_Fire_Perimeter.geojson` | GeoJSON | [LA County Open Data - Eaton Fire Perimeter](https://data.lacounty.gov/datasets/lacounty::eaton-fire-perimeter/about) |
+
+Both files are bundled in `inst/demos/data/` and loaded via `system.file()`.
+
+---
+
+## Setup
 
 ```{r setup, message=FALSE}
-# Load the package (development mode)
-# If you've installed the package, use: library(fedex)
-# For development, use:
+# Install from GitHub (run once, then comment out):
+# devtools::install_github("ignitR-package/firex")
+
+# Or load from source during development:
 devtools::load_all()
 
-# Load terra for plotting
+library(firex)
 library(terra)
+library(sf)
 
-# Load tictoc for timing retrievals
-library(tictoc)
+# Paths to bundled demo data
+data_dir   <- system.file("demos/data", package = "firex")
+shp_path   <- file.path(data_dir, "Eaton_Perimeter_20250121.shp")
+gjson_path <- file.path(data_dir, "Eaton_Fire_Perimeter.geojson")
+
+# Load the shapefile as different object types for the examples below
+eaton_sf   <- sf::st_read(shp_path, quiet = TRUE)   # sf object
+eaton_vect <- terra::vect(shp_path)                  # SpatVector
+eaton_crs  <- terra::crs(eaton_vect)                 # save CRS before ext() drops it
+eaton_ext  <- terra::ext(eaton_vect)                 # SpatExtent (no CRS attached)
 ```
 
-## Step 1: Explore What's Available
+## Part 1: Browse the Catalog
 
-Explore catagories:
+Use `wri_overview()` to see what layers are available, and `wri_overview_df()`
+to get that information as a data frame you can filter.
+
+```{r overview}
+catalog    <- wri_overview()
+catalog_df <- wri_overview_df()
+
+# Preview available layers
+head(catalog_df[, c("id", "wri_domain", "wri_dimension", "data_type", "is_hosted")])
+```
 
 ```{r explore-categories}
-# What domains exist?
-list_domains()
-
-# What dimensions are available?
-list_dimensions()
-
-# What data types are available?
-list_data_types()
+# See all available domains, dimensions, and data types
+cat("Domains: \n")
+sort(unique(catalog_df$wri_domain))
+cat("\nDimensions: \n")
+sort(unique(catalog_df$wri_dimension))
+cat("\nData Types: \n")
+sort(unique(catalog_df$data_type))
 ```
 
-Get an overview of the data catalog (aggregated version of the above functions):
+Filter the data frame to find layers of interest:
 
-```{r explore-catalog}
-# Get a summary of the entire catalog
-catalog_summary()
+```{r filter-df}
+# All water layers
+subset(catalog_df, wri_domain == "water",
+       select = c(id, wri_dimension, data_type))
+
+# Air quality indicator layers only
+subset(catalog_df, wri_domain == "air_quality" & data_type == "indicator",
+       select = c(id, wri_dimension, data_type))
+
+# Search layer IDs by keyword
+catalog_df[grepl("surface_water|asthma", catalog_df$id),
+           c("id", "wri_domain", "data_type")]
 ```
 
-Search file names for specific layers:
+Use `layer_info()` to inspect the full metadata for a single layer:
 
-```{r search-layers}
-# Find all fire-related layers
-search_layers("fire")
-
-# Find asthma-related layers
-search_layers("asthma")
+```{r layer-info}
+t(layer_info("water_status_surface_water_quantity"))
 ```
 
-## Step 2: Query and Filter Layers
+Use `query_stac_flexible()` to filter the underlying STAC items directly by
+any property value:
 
-Filter to what you want:
+```{r query-stac}
+stac_items <- lapply(catalog$data$items, function(x) x$item)
 
-```{r query-layers}
-# Get all air quality layers
-air_quality <- list_layers(domain = "air_quality")
-print(air_quality)
+water_items <- query_stac_flexible(stac_items,
+                                   wri_domain = "water",
+                                   data_type  = "indicator")
 
-# Get all resistance indicators across all domains
-resistance <- list_layers(dimension = "resistance", data_type = "indicator")
-head(resistance)
-
-# See what's currently hosted on KNB
-hosted <- list_layers(hosted_only = TRUE)
-print(hosted)
+vapply(water_items, function(x) x$id, character(1))
 ```
 
-## Step 3: Retrieve and Plot Data
+---
 
-### Example 1: Get Full WRI Score Layer (no bbox)
+## Part 2: Retrieve Data with `get_layer()`
 
-```{r get-layer-full}
-# Get the entire WRI score layer
-tic("Full extent retrieval")
+`get_layer(id, aoi, aoi_crs)` streams a hosted raster layer and optionally
+crops it to a spatial area of interest (`aoi`). The `aoi_crs` argument tells
+the function what coordinate reference system your `aoi` is in -- more on
+that below.
+
+The function returns a `SpatRaster` (from the `terra` package).
+
+### No AOI - full layer
+
+Omit `aoi` to retrieve the full global extent of a layer. This can be slow
+to plot, so the plot call is commented out. The `get_layer()` call itself is
+usually fast here because `terra` opens the remote COG lazily and only reads
+header metadata until you actually crop, plot, or extract values.
+
+```{r get-full}
 wri_full <- get_layer("WRI_score")
-toc()
+
+plot(wri_full,
+     main = "WRI Score - Full Extent",
+     col  = hcl.colors(100, "YlOrRd", rev = TRUE))
 ```
 
-```{r plot-layer-full}
-# Plot it (Takes ~1.5 min)
-#tic("Plotting full layer")
-#plot(wri_full,
-#     main = "WRI Score - Full Extent",
-#     col = hcl.colors(100, "YlOrRd", rev = TRUE))
-#toc()
-```
+---
 
-### Example 2: Get WRI Score for Northern California (with bbox)
+### AOI type 1: numeric bounding box
 
-```{r get-layer-bbox}
-# Define a bounding box for northern California
-# Format: c(xmin, ymin, xmax, ymax) in EPSG:4326 (lon/lat)
-bbox_norcal <- c(-122, 37, -121, 38)
+Pass a vector `c(xmin, ymin, xmax, ymax)` as the `aoi`. You must also supply
+`aoi_crs` to tell the function what coordinate system those numbers are in. The
+returned object keeps a lazy window on the remote COG, so the call itself is
+usually fast and the real read happens when you plot, extract values, or write
+the raster.
 
-# Retrieve the WRI score for this area
-tic("Northern California bbox retrieval")
-wri_norcal <- get_layer("WRI_score", bbox = bbox_norcal)
-toc()
-```
+```{r get-bbox}
+wri_norcal <- get_layer("WRI_score",
+                         aoi     = c(-122, 37, -121, 38),
+                         aoi_crs = "EPSG:4326")
 
-```{r plot-layer-bbox}
-# Plot it
-tic("Northern California bbox plotting")
 plot(wri_norcal,
      main = "WRI Score - Northern California",
-     col = hcl.colors(100, "YlOrRd", rev = TRUE))
-toc()
+     col  = hcl.colors(100, "YlOrRd", rev = TRUE))
 ```
 
-### Example 3: Get WRI Score for Larger Region
+---
 
-```{r get-layer-larger}
-# Define a larger bounding box (Pacific Northwest)
-bbox_pnw <- c(-125, 42, -110, 49)
+### AOI type 2: shapefile path
 
-# Retrieve the WRI score for this larger area
-tic("Pacific Northwest bbox retrieval")
-wri_pnw <- get_layer("WRI_score", bbox = bbox_pnw)
-toc()
+Pass a file path to a `.shp` file. The CRS is read from the `.prj` sidecar
+file, so `aoi_crs` is not needed.
+
+```{r get-shp}
+# Source: LA County Open Data - Eaton Fire Perimeter
+wri_shp <- get_layer("WRI_score", aoi = shp_path)
+
+plot(wri_shp,
+     main = "WRI Score - Eaton Fire Area (shapefile)",
+     col  = hcl.colors(100, "YlOrRd", rev = TRUE))
 ```
 
-```{r plot-layer-larger}
-# Plot it
-tic("Pacific Northwest bbox plotting")
-plot(wri_pnw,
-     main = "WRI Score - Pacific Northwest",
-     col = hcl.colors(100, "YlOrRd", rev = TRUE))
-toc()
+---
+
+### AOI type 3: GeoJSON path
+
+Pass a file path to a `.geojson` file. CRS is embedded in the file format.
+
+```{r get-geojson}
+# Source: LA County Open Data - Eaton Fire Perimeter
+wri_gjson <- get_layer("WRI_score", aoi = gjson_path)
+
+plot(wri_gjson,
+     main = "WRI Score - Eaton Fire Area (GeoJSON)",
+     col  = hcl.colors(100, "YlOrRd", rev = TRUE))
 ```
+
+---
+
+### AOI type 4: sf object
+
+Pass an `sf` object directly. The CRS is embedded in the object.
+
+```{r get-sf}
+# eaton_sf was loaded in setup via sf::st_read()
+wri_sf <- get_layer("WRI_score", aoi = eaton_sf)
+
+plot(wri_sf,
+     main = "WRI Score - Eaton Fire Area (sf object)",
+     col  = hcl.colors(100, "YlOrRd", rev = TRUE))
+```
+
+---
+
+### AOI type 5: SpatVector
+
+Pass a `terra` SpatVector. The CRS is embedded in the object. This example
+also shows using a different layer ID.
+
+```{r get-spatvector}
+# eaton_vect was loaded in setup via terra::vect()
+water_qty <- get_layer("infrastructure_resistance",
+                        aoi = eaton_vect)
+
+plot(water_qty,
+     main = "Infrastructure Resistance - Eaton Fire Area (SpatVector)",
+     col  = hcl.colors(100, "YlOrRd", rev = TRUE))
+```
+
+---
+
+### AOI type 6: SpatExtent
+
+`terra::ext()` returns a `SpatExtent` -- a plain bounding box with no CRS
+attached. You must supply `aoi_crs` explicitly.
+
+```{r get-spatextent}
+# eaton_ext was created in setup via terra::ext(eaton_vect)
+# eaton_crs was saved before ext() stripped it
+wri_ext <- get_layer("WRI_score",
+                      aoi     = eaton_ext,
+                      aoi_crs = eaton_crs)
+
+plot(wri_ext,
+     main = "WRI Score - Eaton Fire Area (SpatExtent)",
+     col  = hcl.colors(100, "YlOrRd", rev = TRUE))
+```
+
+---
+
+## Part 3: CRS Handling and Error Messages
+
+`get_layer()` validates the AOI before making any network request. The
+examples below show what happens when the CRS information is missing,
+conflicting, or incorrect. All calls are wrapped in `tryCatch` so they print
+the error message without stopping the script.
+
+### Missing CRS: numeric bbox without `aoi_crs`
+
+When you pass a numeric vector as the AOI, `aoi_crs` is required. Without it
+the function has no way to know what coordinate system the numbers refer to.
+
+```{r error-no-crs}
+tryCatch(
+  get_layer("WRI_score", aoi = c(-118.2, 34.1, -117.9, 34.3)),
+  error = function(e) message("Error: ", conditionMessage(e))
+)
+```
+
+---
+
+### Missing CRS: SpatExtent without `aoi_crs`
+
+A `SpatExtent` also carries no CRS (terra strips it). The same rule applies.
+
+```{r error-extent-no-crs}
+tryCatch(
+  get_layer("WRI_score", aoi = eaton_ext),
+  error = function(e) message("Error: ", conditionMessage(e))
+)
+```
+
+---
+
+### Conflicting CRS: `aoi_crs` supplied when the object already has one
+
+When you pass an `sf` object or `SpatVector`, the CRS is already embedded.
+Supplying `aoi_crs` as well is ambiguous, so the function rejects it.
+
+```{r error-crs-conflict}
+tryCatch(
+  get_layer("WRI_score", aoi = eaton_sf, aoi_crs = "EPSG:4326"),
+  error = function(e) message("Error: ", conditionMessage(e))
+)
+```
+
+---
+
+### Invalid layer ID
+
+If the layer ID is not in the catalog, the function stops with a clear
+message rather than failing silently.
+
+```{r error-bad-id}
+tryCatch(
+  get_layer("this_layer_does_not_exist"),
+  error = function(e) message("Error: ", conditionMessage(e))
+)
+```
+
+---
+
+### Warning: AOI partially overlaps the layer extent
+
+If the AOI extends beyond the edge of the layer, `get_layer()` issues a
+warning naming which sides overflow, then intersects the request with the
+available area and returns the result normally.
+
+```{r warn-partial-overlap, warning=TRUE}
+# This bbox covers most of the contiguous US. The object returns quickly,
+# but plotting or extracting values from it can still take a while.
+wri_overflow <- get_layer("WRI_score",
+                           aoi     = c(-130, 30, -55, 55),
+                           aoi_crs = "EPSG:4326")
+```
+
+---
+
+### Error: AOI does not overlap the layer at all
+
+If there is no overlap, the function stops.
+
+```{r error-no-overlap}
+tryCatch(
+  get_layer("WRI_score",
+             aoi     = c(-80, -90, -60, -70),
+             aoi_crs = "EPSG:4326"),
+  error = function(e) message("Error: ", conditionMessage(e))
+)
+```
+
+---
 
 ## Summary
 
-1. **Explore**: `catalog_summary()`, `list_domains()`, `search_layers()` to discover what's available
-2. **Query**: `list_layers()` filters by domain, dimension, or data type
-3. **Retrieve**: `get_layer(id, bbox)` to get the actual raster data for your area of interest
+### Functions
 
+| Function | Purpose |
+|----------|---------|
+| `wri_overview()` | Print a summary of available layers |
+| `wri_overview_df()` | Return available layers as a data frame |
+| `layer_info(id)` | Full metadata for one layer |
+| `query_stac_flexible(items, ...)` | Filter STAC items by property |
+| `get_layer(id, aoi, aoi_crs)` | Stream a hosted raster, cropped to AOI |
 
+### AOI input types for `get_layer()`
+
+| AOI type | `aoi_crs` required? |
+|----------|---------------------|
+| `NULL` (returns full layer) | No |
+| Numeric `c(xmin, ymin, xmax, ymax)` | Yes, always |
+| File path to `.shp` | No (read from `.prj` sidecar) |
+| File path to `.geojson` | No (embedded in file) |
+| `sf` or `sfc` object | No (embedded in object) |
+| `terra::SpatVector` | No (embedded in object) |
+| `terra::SpatExtent` | Yes, always (terra strips the CRS) |

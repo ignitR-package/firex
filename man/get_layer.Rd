@@ -4,26 +4,56 @@
 \alias{get_layer}
 \title{Get a WRI raster layer}
 \usage{
-get_layer(id, bbox = NULL, crs = "EPSG:4326")
+get_layer(id, aoi = NULL, aoi_crs = NULL)
 }
 \arguments{
-\item{id}{Character. Layer id to retrieve.}
+\item{id}{Character. Layer id to retrieve. See \code{\link{wri_overview_df}}
+for available ids.}
 
-\item{bbox}{Numeric vector \code{c(xmin, ymin, xmax, ymax)} in the supplied
-\code{crs}. If \code{NULL}, returns the full layer.}
+\item{aoi}{Area of interest used to crop the layer. Accepted inputs:
+\itemize{
+\item \code{NULL} — returns the full global layer (default).
+\item Numeric vector \code{c(xmin, ymin, xmax, ymax)} — bounding box;
+\code{aoi_crs} is required.
+\item Character path to a shapefile (\code{.shp}) or GeoJSON file.
+\item An \code{sf} or \code{sfc} object.
+\item A \code{terra::SpatVector}, \code{terra::SpatRaster}, or
+\code{terra::SpatExtent}.
+}}
 
-\item{crs}{Character. Coordinate reference system of \code{bbox}. Defaults to
-\code{"EPSG:4326"}.}
+\item{aoi_crs}{Character or integer CRS specification (e.g.
+\code{"EPSG:4326"} or \code{4326}). Required when \code{aoi} is a
+numeric bounding box or a CRS-less spatial object; must be omitted when
+\code{aoi} already carries a CRS.}
 }
 \value{
-A \code{terra::SpatRaster}.
+A \code{terra::SpatRaster} cropped to \code{aoi}, or the full
+layer when \code{aoi = NULL}.
 }
 \description{
-Get a WRI raster layer
+Retrieves a hosted WRI raster asset and optionally crops it to a spatial
+area of interest. The area of interest can be supplied in several formats:
+a numeric bounding box, a file path to a shapefile or GeoJSON, an
+\code{sf} object, or a \code{terra} spatial object
+(\code{SpatVector}, \code{SpatRaster}, or \code{SpatExtent}).
 }
 \examples{
 \dontrun{
-bbox <- c(-122, 37, -121, 38)
-rast <- get_layer("WRI_score", bbox = bbox)
+# Full layer
+wri <- get_layer("WRI_score")
+
+# Numeric bbox (WGS 84)
+wri_norcal <- get_layer("WRI_score",
+                        aoi     = c(-122, 37, -121, 38),
+                        aoi_crs = "EPSG:4326")
+
+# Shapefile path
+shp <- system.file("demos/data/Eaton_Perimeter_20250121.shp",
+                   package = "firex")
+wri_eaton <- get_layer("WRI_score", aoi = shp)
 }
+}
+\seealso{
+\code{\link{resolve_to_bbox}}, \code{\link{normalize_crs}},
+\code{\link{wri_overview_df}}
 }

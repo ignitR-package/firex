@@ -1,0 +1,164 @@
+---
+title: "get_layer() Demo"
+format: html
+editor: visual
+---
+
+```{r}
+library(terra)
+library(sf)
+
+devtools::load_all()
+```
+
+# 1. Try an sf one-point numeric object - should fail
+```{r}
+# Point sf object should fail
+library(sf)
+
+pt <- st_sfc(
+  st_point(c(-122, 37)),
+  crs = 4326
+)
+
+pt_sf <- st_sf(geometry = pt)
+
+try(
+  get_layer(
+    id = "WRI_score",
+    aoi = pt_sf
+  )
+)
+```
+
+
+# 2. Numeric bbox
+
+```{r}
+wri_bbox <- get_layer(
+  id = "WRI_score",
+  aoi = c(-122, 37, -121, 38),
+  aoi_crs = "EPSG:4326"
+)
+# Santa Barbara
+wri_sb <- get_layer(
+  id = "WRI_score",
+  aoi = c(-120.0, 34.3, -119.5, 34.7),
+  aoi_crs = "EPSG:4326"
+)
+
+wri_sb
+plot(wri_sb) 
+
+wri_bbox
+plot(wri_bbox)
+```
+
+# 3. sf polygon
+
+```{r}
+sf_poly <- st_as_sfc(
+  st_bbox(
+    c(
+      xmin = -122,
+      ymin = 37,
+      xmax = -121,
+      ymax = 38
+    ),
+    crs = 4326
+  )
+)
+
+sf_poly <- st_sf(geometry = sf_poly)
+
+wri_sf <- get_layer(
+  id = "WRI_score",
+  aoi = sf_poly
+)
+
+wri_sf
+plot(wri_sf)
+```
+
+# 4. SpatVector
+
+```{r}
+spat_vec <- terra::vect(sf_poly)
+
+wri_spatvec <- get_layer(
+  id = "WRI_score",
+  aoi = spat_vec
+)
+
+wri_spatvec
+plot(wri_spatvec)
+```
+
+# 5. SpatExtent
+```{r}
+ext <- terra::ext(-122, -121, 37, 38)
+
+wri_extent <- get_layer(
+  id = "WRI_score",
+  aoi = ext,
+  aoi_crs = "EPSG:4326"
+)
+
+wri_extent
+plot(wri_extent)
+```
+
+# 6. UTM reprojection test
+
+```{r}
+sf_utm <- st_transform(sf_poly, 32610)
+
+wri_utm <- get_layer(
+  id = "WRI_score",
+  aoi = sf_utm
+)
+
+wri_utm
+plot(wri_utm)
+```
+
+# 7. Invalid bbox should fail
+
+```{r}
+try(
+  get_layer(
+    id = "WRI_score",
+    aoi = c(-121, 37, -122, 38),
+    aoi_crs = "EPSG:4326"
+  )
+)
+```
+
+# 8. Missing CRS should fail
+
+```{r}
+try(
+  get_layer(
+    id = "WRI_score",
+    aoi = c(-122, 37, -121, 38)
+  )
+)
+```
+
+# 9. Point AOI should fail
+
+```{r}
+pt <- st_sfc(
+  st_point(c(-122, 37)),
+  crs = 4326
+)
+
+pt_sf <- st_sf(geometry = pt)
+
+try(
+  get_layer(
+    id = "WRI_score",
+    aoi = pt_sf
+  )
+)
+```

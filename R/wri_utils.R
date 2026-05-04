@@ -431,13 +431,21 @@ wri_items_df <- function(data) {
 # HELPER TO CREATE A STRUCTURED RESULT WITH A MESSAGE ATTRIBUTE
 # -----------------------------------------------------------------------------
 
-.make_result <- function(value, message = NULL, status = NULL, bbox = NULL, crs = NULL) {
+.make_result <- function(value,
+                         message = NULL,
+                         status = NULL,
+                         bbox = NULL,
+                         crs = NULL,
+                         aoi = NULL,
+                         type = NULL) {
   structure(
     as.logical(value),
     message = message,
     status = status,
     bbox = bbox,
-    crs = crs
+    crs = crs,
+    aoi = aoi,
+    type = type
   )
 }
 

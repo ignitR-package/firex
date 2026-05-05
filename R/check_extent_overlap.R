@@ -57,7 +57,7 @@ check_extent_overlap <- function(bbox, layer_bbox) {
 
     return(.make_result(
       FALSE,
-      message = paste0("Requested bbox extends outside the layer extent on the ", side_text, "."),
+      message = paste0("Requested bbox extends outside the layer extent to the ", side_text, "."),
       status = "partial",
       bbox = bbox
     ))

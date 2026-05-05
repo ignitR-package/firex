@@ -12,13 +12,13 @@ for available ids.}
 
 \item{aoi}{Area of interest used to crop the layer. Accepted inputs:
 \itemize{
-\item \code{NULL} — returns the full global layer (default).
-\item Numeric vector \code{c(xmin, ymin, xmax, ymax)} — bounding box;
-\code{aoi_crs} is required.
-\item Character path to a shapefile (\code{.shp}) or GeoJSON file.
-\item An \code{sf} or \code{sfc} object.
-\item A \code{terra::SpatVector}, \code{terra::SpatRaster}, or
-\code{terra::SpatExtent}.
+  \item \code{NULL} — returns the full global layer (default).
+  \item Numeric vector \code{c(xmin, ymin, xmax, ymax)} — bounding box;
+    \code{aoi_crs} is required.
+  \item Character path to a shapefile (\code{.shp}) or GeoJSON file.
+  \item An \code{sf} or \code{sfc} object.
+  \item A \code{terra::SpatVector}, \code{terra::SpatRaster}, or
+    \code{terra::SpatExtent}.
 }}
 
 \item{aoi_crs}{Character or integer CRS specification (e.g.
@@ -28,7 +28,7 @@ numeric bounding box or a CRS-less spatial object; must be omitted when
 }
 \value{
 A \code{terra::SpatRaster} cropped to \code{aoi}, or the full
-layer when \code{aoi = NULL}.
+  layer when \code{aoi = NULL}.
 }
 \description{
 Retrieves a hosted WRI raster asset and optionally crops it to a spatial
@@ -55,5 +55,5 @@ wri_eaton <- get_layer("WRI_score", aoi = shp)
 }
 \seealso{
 \code{\link{resolve_to_bbox}}, \code{\link{normalize_crs}},
-\code{\link{wri_overview_df}}
+  \code{\link{wri_overview_df}}
 }

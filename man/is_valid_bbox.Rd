@@ -15,8 +15,8 @@ Default is \code{"EPSG:4326"}.}
 }
 \value{
 A length-1 logical with \code{"status"}, \code{"message"}, and
-\code{"bbox"} attributes. On success, the \code{"bbox"} attribute contains
-the validated bounding box in EPSG:4326.
+  \code{"bbox"} attributes. On success, the \code{"bbox"} attribute contains
+  the validated bounding box in EPSG:4326.
 }
 \description{
 Check if a bounding box is valid

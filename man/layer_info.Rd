@@ -7,7 +7,7 @@
 layer_info(layer_id, fresh = TRUE)
 }
 \arguments{
-\item{layer_id}{Character. The layer/item id to look up, e.g. \code{"WRI_score"}.}
+\item{layer_id}{Character. The layer/item id to look up, e.g. `"WRI_score"`.}
 
 \item{fresh}{Logical. If TRUE (default), rebuilds the catalog from disk.
 If FALSE, not implemented yet.}

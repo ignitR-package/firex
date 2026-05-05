@@ -15,9 +15,9 @@ in EPSG:4326.}
 }
 \value{
 A length-1 logical. Returns \code{TRUE} when \code{bbox} is fully
-contained within the requested layer extent and \code{FALSE} otherwise.
-The return value carries \code{"status"}, \code{"message"}, and
-\code{"bbox"} attributes that can be inspected later.
+  contained within the requested layer extent and \code{FALSE} otherwise.
+  The return value carries \code{"status"}, \code{"message"}, and
+  \code{"bbox"} attributes that can be inspected later.
 }
 \description{
 Checks whether a requested bounding box is fully contained within the
@@ -28,9 +28,9 @@ Overlap outcomes:
 \itemize{
 \item Full overlap - returns \code{TRUE}
 \item Partial overlap - returns \code{FALSE} with a message describing
-which side of the layer extent the bbox exceeds
+  which side of the layer extent the bbox exceeds
 \item No overlap - returns \code{FALSE} with a message that the bbox does
-not overlap the layer extent
+  not overlap the layer extent
 }
 }
 \keyword{internal}

@@ -9,18 +9,18 @@ normalize_crs(crs)
 \arguments{
 \item{crs}{One of:
 \itemize{
-\item An integer EPSG code (e.g. \code{4326}).
-\item A character string: \code{"EPSG:4326"}, a bare numeric string
-(\code{"4326"}), a PROJ string, or a WKT string.
-\item \code{NULL} — treated as "no CRS" and returns \code{TRUE}
-with no \code{"crs"} attribute.
+  \item An integer EPSG code (e.g. \code{4326}).
+  \item A character string: \code{"EPSG:4326"}, a bare numeric string
+    (\code{"4326"}), a PROJ string, or a WKT string.
+  \item \code{NULL} — treated as "no CRS" and returns \code{TRUE}
+    with no \code{"crs"} attribute.
 }}
 }
 \value{
 A length-1 logical. On success (\code{TRUE}) carries a \code{"crs"}
-attribute containing the normalized CRS string. On failure (\code{FALSE})
-carries a \code{"message"} attribute describing why the input was not
-recognized.
+  attribute containing the normalized CRS string. On failure (\code{FALSE})
+  carries a \code{"message"} attribute describing why the input was not
+  recognized.
 }
 \description{
 Validates a coordinate reference system supplied in any of the common

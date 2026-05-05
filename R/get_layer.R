@@ -142,7 +142,7 @@ get_layer <- function(id, aoi = NULL, aoi_crs = NULL) {
 
 
       bbox_proj <- terra::as.polygons(bbox_projected, terra::crs(rast))
-      terra::crop(rast, bbox_proj)
+      rast <- terra::crop(rast, bbox_proj)
 
     }
 

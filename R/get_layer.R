@@ -141,11 +141,9 @@ get_layer <- function(id, aoi = NULL, aoi_crs = NULL) {
       bbox_projected <- terra::project(bbox_ext, from = "EPSG:4326", to = terra::crs(rast))
 
 
-      #bbox_proj <- terra::as.poly...(aoi, crs)
-      #terra::crop(rast, bbox_proj)
+      bbox_proj <- terra::as.polygons(bbox_projected, terra::crs(rast))
+      terra::crop(rast, bbox_proj)
 
-
-      terra::window(rast) <- bbox_projected
     }
 
     rast

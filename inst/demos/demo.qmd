@@ -84,10 +84,6 @@ subset(catalog_df, wri_domain == "water",
 # Air quality indicator layers only
 subset(catalog_df, wri_domain == "air_quality" & data_type == "indicator",
        select = c(id, wri_dimension, data_type))
-
-# Search layer IDs by keyword
-catalog_df[grepl("surface_water|asthma", catalog_df$id),
-           c("id", "wri_domain", "data_type")]
 ```
 
 Use `layer_info()` to inspect the full metadata for a single layer:
@@ -122,17 +118,16 @@ The function returns a `SpatRaster` (from the `terra` package).
 
 ### No AOI - full layer
 
-Omit `aoi` to retrieve the full global extent of a layer. This can be slow
-to plot, so the plot call is commented out. The `get_layer()` call itself is
-usually fast here because `terra` opens the remote COG lazily and only reads
-header metadata until you actually crop, plot, or extract values.
+Omit `aoi` to retrieve the full global extent of a layer. Plotting the full WRI_score layer takes ~35 seconds so we will comment out all but one instance. The `get_layer()` call itself is usually fast here because `terra` opens the remote COG lazily and only reads header metadata until you actually crop, plot, or extract values.
 
 ```{r get-full}
 wri_full <- get_layer("WRI_score")
 
-plot(wri_full,
+system.time({
+  plot(wri_full,
      main = "WRI Score - Full Extent",
      col  = hcl.colors(100, "YlOrRd", rev = TRUE))
+})['elapsed']
 ```
 
 ---
@@ -150,9 +145,12 @@ wri_norcal <- get_layer("WRI_score",
                          aoi     = c(-122, 37, -121, 38),
                          aoi_crs = "EPSG:4326")
 
-plot(wri_norcal,
+system.time({
+  plot(wri_norcal,
      main = "WRI Score - Northern California",
      col  = hcl.colors(100, "YlOrRd", rev = TRUE))
+})['elapsed']
+
 ```
 
 ---
@@ -166,9 +164,12 @@ file, so `aoi_crs` is not needed.
 # Source: LA County Open Data - Eaton Fire Perimeter
 wri_shp <- get_layer("WRI_score", aoi = shp_path)
 
-plot(wri_shp,
+system.time({
+  plot(wri_shp,
      main = "WRI Score - Eaton Fire Area (shapefile)",
      col  = hcl.colors(100, "YlOrRd", rev = TRUE))
+})['elapsed']
+
 ```
 
 ---
@@ -181,6 +182,7 @@ Pass a file path to a `.geojson` file. CRS is embedded in the file format.
 # Source: LA County Open Data - Eaton Fire Perimeter
 wri_gjson <- get_layer("WRI_score", aoi = gjson_path)
 
+system.time({})['elapsed']
 plot(wri_gjson,
      main = "WRI Score - Eaton Fire Area (GeoJSON)",
      col  = hcl.colors(100, "YlOrRd", rev = TRUE))

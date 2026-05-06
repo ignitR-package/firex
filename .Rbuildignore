@@ -7,3 +7,5 @@
 ^pkgdown$
 ^\.github$
 ^integration_milestones\.md$
+^\.positai$
+^\.claude$

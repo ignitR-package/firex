@@ -13,3 +13,4 @@ R/list_layers.R
 R/get_layer.R
 R/is_valid_bbox.R
 docs
+.positai

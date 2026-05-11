@@ -45,6 +45,7 @@ resolve_aoi <- function(aoi, aoi_crs = NULL) {
     aoi <- path_obj
   }
 
+  # Establish crs
   crs_result <- resolve_aoi_crs(aoi, aoi_crs)
 
   if (!isTRUE(crs_result)) {
@@ -52,7 +53,7 @@ resolve_aoi <- function(aoi, aoi_crs = NULL) {
   }
 
   resolved_crs <- attr(crs_result, "crs")
-
+  # Handle numeric vector input
   if (is.numeric(aoi)) {
     if (length(aoi) != 4L || anyNA(aoi) || any(!is.finite(aoi))) {
       return(.make_result(

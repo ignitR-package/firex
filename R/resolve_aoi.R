@@ -41,32 +41,32 @@ resolve_aoi <- function(aoi, aoi_crs = NULL) {
 
     input_type <- "bbox"
 
-  } else if (inherits(aoi, "SpatExtent")) {
+  # else if (inherits(aoi, "SpatExtent")) {
 
-    extent <- aoi
-    input_type <- "extent"
-
-  } else {
-
-    obj <- tryCatch(
-      {
-        if (inherits(aoi, c("SpatVector", "SpatRaster"))) {
-          aoi
-        } else if (inherits(aoi, c("RasterLayer", "RasterStack", "RasterBrick"))) {
-          terra::rast(aoi)
-        } else {
-          terra::vect(aoi)
-        }
-      },
-      error = function(e) NULL
-    )
-
-    if (is.null(obj)) {
-      return(.make_result(
-        FALSE,
-        message = "`aoi` could not be converted to a terra-compatible spatial object."
-      ))
-    }
+  #   extent <- aoi
+  #   input_type <- "extent"
+  #
+    } else {
+  #
+  #   obj <- tryCatch(
+  #     {
+  #       if (inherits(aoi, c("SpatVector", "SpatRaster"))) {
+  #         aoi
+  #       } else if (inherits(aoi, c("RasterLayer", "RasterStack", "RasterBrick"))) {
+  #         terra::rast(aoi)
+  #       } else {
+  #         terra::vect(aoi)
+  #       }
+  #     },
+  #     error = function(e) NULL
+  #   )
+  #
+  #   if (is.null(obj)) {
+  #     return(.make_result(
+  #       FALSE,
+  #       message = "`aoi` could not be converted to a terra-compatible spatial object."
+  #     ))
+  #   }
 
     extent <- tryCatch(
       terra::ext(obj),
@@ -83,12 +83,12 @@ resolve_aoi <- function(aoi, aoi_crs = NULL) {
     ))
   }
 
-  if (extent$xmin >= extent$xmax || extent$ymin >= extent$ymax) {
-    return(.make_result(
-      FALSE,
-      message = "`aoi` has zero-area extent. Single points are not valid AOIs unless buffered."
-    ))
-  }
+  # if (extent$xmin >= extent$xmax || extent$ymin >= extent$ymax) {
+  #   return(.make_result(
+  #     FALSE,
+  #     message = "`aoi` has zero-area extent. Single points are not valid AOIs unless buffered."
+  #   ))
+  # }
 
   aoi_poly <- tryCatch(
     terra::as.polygons(extent),

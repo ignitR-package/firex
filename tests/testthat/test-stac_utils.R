@@ -26,7 +26,7 @@ test_that("get_layer validates inputs before attempting retrieval", {
   expect_error(
     get_layer(id = "WRI_score", aoi = c(-122, 37, -121)),
     fixed = TRUE,
-    "`aoi` must contain four numeric values: c(xmin, ymin, xmax, ymax)."
+    "`aoi` has no CRS. Supply `aoi_crs` or attach a CRS to `aoi`."
   )
   expect_error(
     get_layer(id = "WRI_score", aoi = c(-122, 37, -121), aoi_crs = "EPSG:4326"),
@@ -35,7 +35,7 @@ test_that("get_layer validates inputs before attempting retrieval", {
   )
 })
 
-test_that("resolve_aoi reads CRS from shapefile paths", {
+test_that("resolve_aoi accepts shapefile paths", {
   shp <- testthat::test_path("../../inst/demos/data/Eaton_Perimeter_20250121.shp")
 
   result <- resolve_aoi(shp)

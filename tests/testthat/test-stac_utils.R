@@ -24,13 +24,13 @@ test_that("layer_info validates inputs before reading the catalog", {
 test_that("get_layer validates inputs before attempting retrieval", {
   expect_error(get_layer(), "`id` must be a single non-empty character string.")
   expect_error(
-    get_layer(id = "WRI_score", bbox = c(-122, 37, -121)),
+    get_layer(id = "WRI_score", aoi = c(-122, 37, -121)),
     fixed = TRUE,
-    "`bbox` must contain four numeric values: c(xmin, ymin, xmax, ymax)."
+    "`aoi` has no CRS. Supply `aoi_crs` or attach a CRS to `aoi`."
   )
   expect_error(
-    get_layer(id = "WRI_score", bbox = c(-100, 50, -120, 30)),
+    get_layer(id = "WRI_score", aoi = c(-122, 37, -121), aoi_crs = "EPSG:4326"),
     fixed = TRUE,
-    "You supplied bbox = c(xmin = -100, ymin = 50, xmax = -120, ymax = 30). `xmin` must be less than `xmax`."
+    "`aoi` could not be converted to a terra-compatible spatial object."
   )
 })

@@ -1,3 +1,19 @@
+#' Resolve an area of interest
+#'
+#' Converts supported area-of-interest inputs to a `terra` polygon, bounding
+#' box, extent, and CRS.
+#'
+#' @param aoi Area of interest. Accepted inputs include `NULL`, a numeric vector
+#'   `c(xmin, ymin, xmax, ymax)`, a `terra::SpatExtent`, a file path, or a
+#'   spatial object that can be converted with `terra::vect()` or
+#'   `terra::rast()`.
+#' @param aoi_crs Optional character or integer CRS specification for `aoi`,
+#'   such as `"EPSG:4326"` or `4326`.
+#'
+#' @return A length-1 logical with result metadata stored in attributes,
+#'   including `"aoi"`, `"bbox"`, `"extent"`, `"crs"`, `"type"`, and
+#'   `"message"` when validation fails.
+#' @keywords internal
 resolve_aoi <- function(aoi, aoi_crs = NULL) {
 
   if (is.null(aoi)) {

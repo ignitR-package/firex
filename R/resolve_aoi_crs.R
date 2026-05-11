@@ -1,3 +1,16 @@
+#' Resolve an area-of-interest CRS
+#'
+#' Validates a supplied CRS and checks whether an area-of-interest object already
+#' carries one.
+#'
+#' @param aoi Area of interest to inspect for an existing CRS.
+#' @param aoi_crs Optional character or integer CRS specification, such as
+#'   `"EPSG:4326"` or `4326`.
+#'
+#' @return A length-1 logical with the resolved CRS stored in the `"crs"`
+#'   attribute on success, or a validation message stored in `"message"` on
+#'   failure.
+#' @keywords internal
 resolve_aoi_crs <- function(aoi, aoi_crs = NULL) {
 
   if (!is.null(aoi_crs)) {

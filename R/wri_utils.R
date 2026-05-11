@@ -8,12 +8,25 @@
 #     collection.json -> rel="item" to items/*.json
 # =============================================================================
 
+#' Use a fallback value for `NULL`
+#'
+#' @param a Primary value.
+#' @param b Fallback value used when `a` is `NULL`.
+#'
+#' @return `a` when it is not `NULL`; otherwise `b`.
+#' @keywords internal
 `%||%` <- function(a, b) if (!is.null(a)) a else b
 
 # -----------------------------------------------------------------------------
 # INTERNAL: REQUIRE rstac
 # -----------------------------------------------------------------------------
 
+#' Require rstac
+#'
+#' Checks that `rstac` is installed before reading STAC files.
+#'
+#' @return `NULL`, invisibly. Errors if `rstac` is not installed.
+#' @keywords internal
 .wri_require_rstac <- function() {
   if (!requireNamespace("rstac", quietly = TRUE)) {
     stop(
@@ -27,6 +40,13 @@
 # INTERNAL: SAFELY PULL FIRST PROPERTY VALUE
 # -----------------------------------------------------------------------------
 
+#' Extract the first STAC item property value
+#'
+#' @param item_obj STAC item object.
+#' @param key Character. Property name to extract from `item_obj$properties`.
+#'
+#' @return A character scalar, or `NA_character_` when the property is missing.
+#' @keywords internal
 .wri_prop1 <- function(item_obj, key) {
   properties <- item_obj$properties
   if (is.null(properties)) return(NA_character_)
@@ -41,6 +61,10 @@
 # GET PACKAGE PATH (DEV MODE)
 # -----------------------------------------------------------------------------
 
+#' Resolve the package path in development mode
+#'
+#' @return A normalized package root path.
+#' @keywords internal
 wri_get_pkg_path <- function() {
 
   if (!requireNamespace("pkgload", quietly = TRUE)) {
@@ -70,6 +94,10 @@ wri_get_pkg_path <- function() {
 # RESOLVE STAC CATALOG PATH
 # -----------------------------------------------------------------------------
 
+#' Resolve the local STAC catalog path
+#'
+#' @return A normalized path to `inst/extdata/stac/catalog.json`.
+#' @keywords internal
 wri_resolve_stac_path <- function() {
 
   pkg_path <- tryCatch(
@@ -124,6 +152,13 @@ wri_resolve_stac_path <- function() {
 # RESOLVE HREF (RELATIVE / ABSOLUTE / URL)
 # -----------------------------------------------------------------------------
 
+#' Resolve a STAC href
+#'
+#' @param base_file Character. Path to the STAC file containing the href.
+#' @param href Character. Relative path, absolute path, or URL to resolve.
+#'
+#' @return A character path or URL, or `NA_character_` for missing hrefs.
+#' @keywords internal
 wri_resolve_href <- function(base_file, href) {
 
   if (is.null(href) || !nzchar(href)) {
@@ -149,6 +184,13 @@ wri_resolve_href <- function(base_file, href) {
 # FILTER LINKS BY REL TYPE
 # -----------------------------------------------------------------------------
 
+#' Filter STAC links by relation type
+#'
+#' @param stac_obj STAC object containing a `links` list.
+#' @param rel Character. Link relation value to keep.
+#'
+#' @return A list of matching STAC link objects.
+#' @keywords internal
 wri_links_by_rel <- function(stac_obj, rel) {
 
   links <- stac_obj$links
@@ -169,6 +211,13 @@ wri_links_by_rel <- function(stac_obj, rel) {
 # EXTRACT ASSETS FROM STAC ITEM (DATA FRAME)
 # -----------------------------------------------------------------------------
 
+#' Extract STAC item assets as a data frame
+#'
+#' @param item_obj STAC item object.
+#' @param item_file Character. Path to the source item file.
+#'
+#' @return A data frame with one row per asset.
+#' @keywords internal
 wri_item_assets_df <- function(item_obj, item_file) {
 
   assets <- item_obj$assets
@@ -207,6 +256,10 @@ wri_item_assets_df <- function(item_obj, item_file) {
 # READ ROOT STAC
 # -----------------------------------------------------------------------------
 
+#' Read the root STAC catalog
+#'
+#' @return A STAC object returned by `rstac::read_stac()`.
+#' @keywords internal
 wri_read_stac_root <- function() {
   .wri_require_rstac()
   stac_path <- wri_resolve_stac_path()
@@ -217,6 +270,13 @@ wri_read_stac_root <- function() {
 # READ FULL STAC TREE
 # -----------------------------------------------------------------------------
 
+#' Read the full linked STAC tree
+#'
+#' Follows child and item links from the root STAC catalog and gathers
+#' collection and item metadata.
+#'
+#' @return A list with `catalog_path`, `catalog`, `collections`, and `items`.
+#' @keywords internal
 wri_read_stac_tree <- function() {
 
   .wri_require_rstac()
@@ -330,6 +390,12 @@ wri_read_stac_tree <- function() {
   )
 }
 
+#' Flatten STAC item metadata
+#'
+#' @param data A list returned by `wri_read_stac_tree()`.
+#'
+#' @return A data frame with one row per asset or layer.
+#' @keywords internal
 wri_items_df <- function(data) {
 
   if (is.null(data$items) || length(data$items) == 0) {
@@ -400,6 +466,13 @@ wri_items_df <- function(data) {
 # PICK HOSTED COG RASTER ASSET FROM ITEM ROWS (should non-hosted, non-COG data be added in the future)
 # -----------------------------------------------------------------------------
 
+#' Pick a hosted raster asset
+#'
+#' @param df Data frame of layer asset rows.
+#'
+#' @return A one-row data frame for the selected raster asset, or an empty data
+#'   frame when no raster asset is available.
+#' @keywords internal
 .wri_pick_raster_asset <- function(df) {
 
   if (is.null(df) || nrow(df) == 0) {
@@ -431,6 +504,19 @@ wri_items_df <- function(data) {
 # HELPER TO CREATE A STRUCTURED RESULT WITH A MESSAGE ATTRIBUTE
 # -----------------------------------------------------------------------------
 
+#' Create a structured logical result
+#'
+#' @param value Logical value for the result.
+#' @param message Optional character message.
+#' @param status Optional character status label.
+#' @param bbox Optional bounding box attribute.
+#' @param extent Optional extent attribute.
+#' @param crs Optional CRS attribute.
+#' @param aoi Optional area-of-interest attribute.
+#' @param type Optional input type attribute.
+#'
+#' @return A length-1 logical with the supplied attributes attached.
+#' @keywords internal
 .make_result <- function(value,
                          message = NULL,
                          status = NULL,

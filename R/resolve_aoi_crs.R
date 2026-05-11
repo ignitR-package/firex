@@ -36,13 +36,12 @@ resolve_aoi_crs <- function(aoi, aoi_crs = NULL) {
     }
   }
 
-  #
   object_crs <- tryCatch(
     terra::crs(aoi),
-    error = function(e) "" # If crs(aoi) errors,
+    error = function(e) ""
   )
 
-  # Sucessfully found CRS?
+  # Successfully found CRS?
   has_object_crs <- nzchar(object_crs)
 
   if (has_object_crs && !is.null(aoi_crs)) {

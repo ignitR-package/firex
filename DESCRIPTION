@@ -18,8 +18,8 @@ License: MIT + file LICENSE
 URL: https://ignitr-package.github.io/firex/,
     https://github.com/ignitR-package/firex
 Imports:
-    firex,
-    terra
+    terra,
+    rstac
 Suggests:
     knitr,
     rmarkdown,
@@ -28,7 +28,5 @@ Suggests:
     tictoc
 VignetteBuilder: knitr
 Config/testthat/edition: 3
-Imports:
-    terra,
-    rstac
-URL: https://ignitr-package.github.io/firex/
+Encoding: UTF-8
+RoxygenNote: 7.3.3

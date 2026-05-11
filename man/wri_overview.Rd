@@ -11,8 +11,8 @@ wri_overview(fresh = TRUE)
 If FALSE, not implemented yet (reserved for caching).}
 }
 \value{
-An object of class \code{wri_overview}.
+An object of class `wri_overview`.
 }
 \description{
-Reads the local STAC catalog and returns a \code{wri_overview} object.
+Reads the local STAC catalog and returns a `wri_overview` object.
 }

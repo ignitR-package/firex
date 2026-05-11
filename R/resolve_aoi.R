@@ -4,9 +4,9 @@
 #' box, extent, and CRS.
 #'
 #' @param aoi Area of interest. Accepted inputs include `NULL`, a numeric vector
-#'   `c(xmin, ymin, xmax, ymax)`, a `terra::SpatExtent`, a file path, or a
-#'   spatial object that can be converted with `terra::vect()` or
-#'   `terra::rast()`.
+#'   `c(xmin, ymin, xmax, ymax)`, a character file path readable by
+#'   `terra::vect()` or `terra::rast()`, or an object supported by
+#'   `terra::ext()`.
 #' @param aoi_crs Optional character or integer CRS specification for `aoi`,
 #'   such as `"EPSG:4326"` or `4326`.
 #'
@@ -16,8 +16,33 @@
 #' @keywords internal
 resolve_aoi <- function(aoi, aoi_crs = NULL) {
 
+  # Handle null aoi
   if (is.null(aoi)) {
     return(.make_result(TRUE, aoi = NULL, bbox = NULL, extent = NULL, crs = NULL))
+  }
+
+  # Handle file paths, try converting to vect/rast
+  if (is.character(aoi) && length(aoi) == 1L && file.exists(aoi)) {
+    path_obj <- tryCatch(
+      terra::vect(aoi),
+      error = function(e) NULL
+    )
+
+    if (is.null(path_obj)) {
+      path_obj <- tryCatch(
+        terra::rast(aoi),
+        error = function(e) NULL
+      )
+    }
+
+    if (is.null(path_obj)) {
+      return(.make_result(
+        FALSE,
+        message = "`aoi` file path could not be read by terra::vect() or terra::rast()."
+      ))
+    }
+
+    aoi <- path_obj
   }
 
   crs_result <- resolve_aoi_crs(aoi, aoi_crs)
@@ -28,7 +53,35 @@ resolve_aoi <- function(aoi, aoi_crs = NULL) {
 
   resolved_crs <- attr(crs_result, "crs")
 
-  if (is.numeric(aoi) && length(aoi) == 4L) {
+  if (is.numeric(aoi)) {
+    if (length(aoi) != 4L || anyNA(aoi) || any(!is.finite(aoi))) {
+      return(.make_result(
+        FALSE,
+        message = "`aoi` must contain four numeric values: c(xmin, ymin, xmax, ymax)."
+      ))
+    }
+
+    bbox_label <- paste0(
+      "aoi = c(xmin = ", aoi[1],
+      ", ymin = ", aoi[2],
+      ", xmax = ", aoi[3],
+      ", ymax = ", aoi[4],
+      ")"
+    )
+
+    if (aoi[1] >= aoi[3]) {
+      return(.make_result(
+        FALSE,
+        message = paste0("You supplied ", bbox_label, ". `xmin` must be less than `xmax`.")
+      ))
+    }
+
+    if (aoi[2] >= aoi[4]) {
+      return(.make_result(
+        FALSE,
+        message = paste0("You supplied ", bbox_label, ". `ymin` must be less than `ymax`.")
+      ))
+    }
 
     # User/package bbox order: c(xmin, ymin, xmax, ymax)
     # terra::ext() order: xmin, xmax, ymin, ymax
@@ -41,54 +94,28 @@ resolve_aoi <- function(aoi, aoi_crs = NULL) {
 
     input_type <- "bbox"
 
-  # else if (inherits(aoi, "SpatExtent")) {
-
-  #   extent <- aoi
-  #   input_type <- "extent"
-  #
-    } else {
-  #
-  #   obj <- tryCatch(
-  #     {
-  #       if (inherits(aoi, c("SpatVector", "SpatRaster"))) {
-  #         aoi
-  #       } else if (inherits(aoi, c("RasterLayer", "RasterStack", "RasterBrick"))) {
-  #         terra::rast(aoi)
-  #       } else {
-  #         terra::vect(aoi)
-  #       }
-  #     },
-  #     error = function(e) NULL
-  #   )
-  #
-  #   if (is.null(obj)) {
-  #     return(.make_result(
-  #       FALSE,
-  #       message = "`aoi` could not be converted to a terra-compatible spatial object."
-  #     ))
-  #   }
-
+  } else {
     extent <- tryCatch(
-      terra::ext(obj),
+      terra::ext(aoi),
       error = function(e) NULL
     )
 
-    input_type <- class(obj)[1]
+    input_type <- class(aoi)[1]
   }
 
   if (is.null(extent)) {
     return(.make_result(
       FALSE,
-      message = "Could not extract extent from `aoi`."
+      message = "`aoi` is not in a supported format. Provide a numeric bbox, terra spatial object, or another object supported by terra::ext()."
     ))
   }
 
-  # if (extent$xmin >= extent$xmax || extent$ymin >= extent$ymax) {
-  #   return(.make_result(
-  #     FALSE,
-  #     message = "`aoi` has zero-area extent. Single points are not valid AOIs unless buffered."
-  #   ))
-  # }
+  if (extent$xmin >= extent$xmax || extent$ymin >= extent$ymax) {
+    return(.make_result(
+      FALSE,
+      message = "`aoi` has zero-area extent. Single points are not valid AOIs unless buffered."
+    ))
+  }
 
   aoi_poly <- tryCatch(
     terra::as.polygons(extent),
@@ -102,13 +129,26 @@ resolve_aoi <- function(aoi, aoi_crs = NULL) {
     ))
   }
 
-  terra::crs(aoi_poly) <- resolved_crs
+  crs_assigned <- tryCatch(
+    {
+      terra::crs(aoi_poly) <- resolved_crs
+      TRUE
+    },
+    error = function(e) FALSE
+  )
+
+  if (!isTRUE(crs_assigned)) {
+    return(.make_result(
+      FALSE,
+      message = "`aoi_crs` is not recognized. Provide an EPSG code, PROJ string, or WKT string."
+    ))
+  }
 
   bbox <- c(
-    xmin = extent$xmin,
-    ymin = extent$ymin,
-    xmax = extent$xmax,
-    ymax = extent$ymax
+    xmin = unname(extent$xmin),
+    ymin = unname(extent$ymin),
+    xmax = unname(extent$xmax),
+    ymax = unname(extent$ymax)
   )
 
   .make_result(

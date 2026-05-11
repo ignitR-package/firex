@@ -1,0 +1,62 @@
+---
+title: "get_layer() Demo"
+format: html
+editor: visual
+---
+
+```{r}
+library(terra)
+library(sf)
+
+devtools::load_all()
+```
+
+```{r}
+library(terra)
+library(sf)
+
+devtools::load_all()
+
+
+
+## Santa Barbara AOI
+
+
+sb_bbox <- c(
+  -120.0, 34.3,
+  -119.5, 34.7
+)
+
+wri_sb <- get_layer(
+  id = "WRI_score",
+  aoi = sb_bbox,
+  aoi_crs = "EPSG:4326"
+)
+
+
+plot(
+  wri_sb,
+  main = "WRI Score - Santa Barbara"
+)
+
+
+## California AOI
+
+
+ca_bbox <- c(
+  -124.5, 32.5,
+  -114.0, 42.0
+)
+
+wri_ca <- get_layer(
+  id = "WRI_score",
+  aoi = ca_bbox,
+  aoi_crs = "EPSG:4326"
+)
+
+
+plot(
+  wri_ca,
+  main = "WRI Score - California"
+)
+```

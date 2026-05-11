@@ -2,6 +2,15 @@
 # S3 method: printing wri_overview objects (summary view)
 # =============================================================================
 
+#' Print a WRI overview summary
+#'
+#' Prints a compact summary of collections and layer metadata for a
+#' `wri_overview` object.
+#'
+#' @param x A `wri_overview` object.
+#' @param ... Additional arguments passed to the S3 method. Currently unused.
+#'
+#' @return Called for its side effect of printing a summary.
 #' @export
 print.wri_overview <- function(x, ...) {
 

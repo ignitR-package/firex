@@ -7,53 +7,35 @@
 get_layer(id, aoi = NULL, aoi_crs = NULL)
 }
 \arguments{
-\item{id}{Character. Layer id to retrieve. See \code{\link{wri_overview_df}}
-for available ids.}
+\item{id}{Character. Layer id to retrieve. See \code{\link[=wri_overview_df]{wri_overview_df()}} for
+available ids.}
 
-\item{aoi}{Area of interest used to crop the layer. Accepted inputs:
+\item{aoi}{Optional area of interest used to crop the layer. Accepted inputs:
 \itemize{
-  \item \code{NULL} — returns the full global layer (default).
-  \item Numeric vector \code{c(xmin, ymin, xmax, ymax)} — bounding box;
-    \code{aoi_crs} is required.
-  \item Character path to a shapefile (\code{.shp}) or GeoJSON file.
-  \item An \code{sf} or \code{sfc} object.
-  \item A \code{terra::SpatVector}, \code{terra::SpatRaster}, or
-    \code{terra::SpatExtent}.
-}}
+\item \code{NULL}, to return the full layer.
+\item Numeric vector \code{c(xmin, ymin, xmax, ymax)}.
+\item Character file path readable by \code{terra::vect()} or \code{terra::rast()},
+such as a shapefile, GeoJSON, GeoPackage, or raster file.
+\item \code{terra} objects: \code{SpatVector}, \code{SpatRaster}, \code{SpatExtent},
+\code{SpatVectorProxy}, \code{SpatVectorCollection}, \code{SpatRasterCollection}, or
+\code{SpatRasterDataset}.
+\item \code{sf} or \code{sfc} objects.
+\item \code{sp} spatial objects.
+\item \code{raster} package objects: \code{RasterLayer}, \code{RasterStack},
+\code{RasterBrick}, or \code{Extent}.
+\item A \code{bbox} object or matrix accepted by \code{terra::ext()}.
+}
+CRS-less AOIs, such as numeric bounding boxes and extents, require
+\code{aoi_crs}.}
 
-\item{aoi_crs}{Character or integer CRS specification (e.g.
-\code{"EPSG:4326"} or \code{4326}). Required when \code{aoi} is a
-numeric bounding box or a CRS-less spatial object; must be omitted when
-\code{aoi} already carries a CRS.}
+\item{aoi_crs}{Optional character or integer CRS specification for \code{aoi},
+such as \code{"EPSG:4326"} or \code{4326}.}
 }
 \value{
-A \code{terra::SpatRaster} cropped to \code{aoi}, or the full
-  layer when \code{aoi = NULL}.
+A \link[terra:SpatRaster-class]{terra::SpatRaster} cropped to \code{aoi}, or the full layer when
+\code{aoi = NULL}.
 }
 \description{
 Retrieves a hosted WRI raster asset and optionally crops it to a spatial
-area of interest. The area of interest can be supplied in several formats:
-a numeric bounding box, a file path to a shapefile or GeoJSON, an
-\code{sf} object, or a \code{terra} spatial object
-(\code{SpatVector}, \code{SpatRaster}, or \code{SpatExtent}).
-}
-\examples{
-\dontrun{
-# Full layer
-wri <- get_layer("WRI_score")
-
-# Numeric bbox (WGS 84)
-wri_norcal <- get_layer("WRI_score",
-                        aoi     = c(-122, 37, -121, 38),
-                        aoi_crs = "EPSG:4326")
-
-# Shapefile path
-shp <- system.file("demos/data/Eaton_Perimeter_20250121.shp",
-                   package = "firex")
-wri_eaton <- get_layer("WRI_score", aoi = shp)
-}
-}
-\seealso{
-\code{\link{resolve_to_bbox}}, \code{\link{normalize_crs}},
-  \code{\link{wri_overview_df}}
+area of interest.
 }

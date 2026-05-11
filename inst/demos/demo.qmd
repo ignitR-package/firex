@@ -35,7 +35,6 @@ Both files are bundled in `inst/demos/data/` and loaded via `system.file()`.
 # Or load from source during development:
 devtools::load_all()
 
-library(firex)
 library(terra)
 library(sf)
 
@@ -118,7 +117,7 @@ The function returns a `SpatRaster` (from the `terra` package).
 
 ### No AOI - full layer
 
-Omit `aoi` to retrieve the full global extent of a layer. Plotting the full WRI_score layer takes ~35 seconds so we will comment out all but one instance. The `get_layer()` call itself is usually fast here because `terra` opens the remote COG lazily and only reads header metadata until you actually crop, plot, or extract values.
+Omit `aoi` to retrieve the full global extent of a layer. Plotting the full WRI_score layer takes ~30-60 seconds. The `get_layer()` call itself is usually fast here because `terra` opens the remote COG lazily and only reads header metadata until you actually crop, plot, or extract values.
 
 ```{r get-full}
 wri_full <- get_layer("WRI_score")
@@ -169,6 +168,8 @@ system.time({
      main = "WRI Score - Eaton Fire Area (shapefile)",
      col  = hcl.colors(100, "YlOrRd", rev = TRUE))
 })['elapsed']
+plot(terra::project(terra::vect(shp_path), terra::crs(wri_shp)),
+     add = TRUE, border = "black")
 
 ```
 
@@ -186,6 +187,8 @@ system.time({})['elapsed']
 plot(wri_gjson,
      main = "WRI Score - Eaton Fire Area (GeoJSON)",
      col  = hcl.colors(100, "YlOrRd", rev = TRUE))
+plot(terra::project(terra::vect(gjson_path), terra::crs(wri_gjson)),
+     add = TRUE, border = "black")
 ```
 
 ---
@@ -201,6 +204,8 @@ wri_sf <- get_layer("WRI_score", aoi = eaton_sf)
 plot(wri_sf,
      main = "WRI Score - Eaton Fire Area (sf object)",
      col  = hcl.colors(100, "YlOrRd", rev = TRUE))
+plot(terra::project(terra::vect(eaton_sf), terra::crs(wri_sf)),
+     add = TRUE, border = "black")
 ```
 
 ---
@@ -218,6 +223,8 @@ water_qty <- get_layer("infrastructure_resistance",
 plot(water_qty,
      main = "Infrastructure Resistance - Eaton Fire Area (SpatVector)",
      col  = hcl.colors(100, "YlOrRd", rev = TRUE))
+plot(terra::project(eaton_vect, terra::crs(water_qty)),
+     add = TRUE, border = "black")
 ```
 
 ---
@@ -237,6 +244,8 @@ wri_ext <- get_layer("WRI_score",
 plot(wri_ext,
      main = "WRI Score - Eaton Fire Area (SpatExtent)",
      col  = hcl.colors(100, "YlOrRd", rev = TRUE))
+plot(terra::project(terra::vect(eaton_ext, crs = eaton_crs), terra::crs(wri_ext)),
+     add = TRUE, border = "black")
 ```
 
 ---
@@ -310,11 +319,13 @@ warning naming which sides overflow, then intersects the request with the
 available area and returns the result normally.
 
 ```{r warn-partial-overlap, warning=TRUE}
-# This bbox covers most of the contiguous US. The object returns quickly,
-# but plotting or extracting values from it can still take a while.
-wri_overflow <- get_layer("WRI_score",
+# This bbox covers most of the contiguous US, requires crop so does not load lazily, ~35 seconds again
+system.time({
+  wri_overflow <- get_layer("WRI_score",
                            aoi     = c(-130, 30, -55, 55),
                            aoi_crs = "EPSG:4326")
+})['elapsed']
+
 ```
 
 ---
@@ -335,6 +346,8 @@ tryCatch(
 ---
 
 ## Summary
+
+We are working on avoiding wait times by cropping with SpatExtent exclusively, which terra treats as lazy windows over the remote COG, rather than SpatVectors, which materialize the cropped tiles.
 
 ### Functions
 

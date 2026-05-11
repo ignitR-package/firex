@@ -35,6 +35,14 @@ test_that("get_layer validates inputs before attempting retrieval", {
   )
 })
 
+test_that("get_layer rejects AOIs outside the layer extent before retrieval", {
+  expect_error(
+    get_layer("WRI_score", aoi = c(-80, -90, -60, -70), aoi_crs = "EPSG:4326"),
+    "does not overlap",
+    fixed = TRUE
+  )
+})
+
 test_that("resolve_aoi accepts shapefile paths", {
   shp <- testthat::test_path("../../inst/demos/data/Eaton_Perimeter_20250121.shp")
 

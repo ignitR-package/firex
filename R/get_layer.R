@@ -5,9 +5,23 @@
 #'
 #' @param id Character. Layer id to retrieve. See [wri_overview_df()] for
 #'   available ids.
-#' @param aoi Optional area of interest used to crop the layer. Accepted inputs
-#'   include `NULL`, a numeric vector `c(xmin, ymin, xmax, ymax)`, a path to a
-#'   shapefile or GeoJSON, an `sf` or `sfc` object, or a `terra` spatial object.
+#' @param aoi Optional area of interest used to crop the layer. Accepted inputs:
+#'   \itemize{
+#'   \item `NULL`, to return the full layer.
+#'   \item Numeric vector `c(xmin, ymin, xmax, ymax)`.
+#'   \item Character file path readable by `terra::vect()` or `terra::rast()`,
+#'   such as a shapefile, GeoJSON, GeoPackage, or raster file.
+#'   \item `terra` objects: `SpatVector`, `SpatRaster`, `SpatExtent`,
+#'   `SpatVectorProxy`, `SpatVectorCollection`, `SpatRasterCollection`, or
+#'   `SpatRasterDataset`.
+#'   \item `sf` or `sfc` objects.
+#'   \item `sp` spatial objects.
+#'   \item `raster` package objects: `RasterLayer`, `RasterStack`,
+#'   `RasterBrick`, or `Extent`.
+#'   \item A `bbox` object or matrix accepted by `terra::ext()`.
+#'   }
+#'   CRS-less AOIs, such as numeric bounding boxes and extents, require
+#'   `aoi_crs`.
 #' @param aoi_crs Optional character or integer CRS specification for `aoi`,
 #'   such as `"EPSG:4326"` or `4326`.
 #'

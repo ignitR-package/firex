@@ -2,7 +2,6 @@
 
 S3method(print,wri_overview)
 export(get_layer)
-export(is_valid_bbox)
 export(layer_info)
 export(query_stac_flexible)
 export(wri_overview)

@@ -33,7 +33,7 @@ rast <- get_layer("WRI_score")
 
 # Retrieve a raster layer cropped to a bounding box (xmin, ymin, xmax, ymax)
 bbox <- c(-122, 37, -121, 38)
-rast <- get_layer("WRI_score", bbox = bbox)
+rast <- get_layer("WRI_score", aoi = bbox, aoi_crs = "EPSG:4326")
 
 # Query STAC items by property
 catalog <- wri_overview()

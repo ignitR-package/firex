@@ -26,11 +26,22 @@ test_that("get_layer validates inputs before attempting retrieval", {
   expect_error(
     get_layer(id = "WRI_score", aoi = c(-122, 37, -121)),
     fixed = TRUE,
-    "`aoi` has no CRS. Supply `aoi_crs` or attach a CRS to `aoi`."
+    "`aoi` must contain four numeric values: c(xmin, ymin, xmax, ymax)."
   )
   expect_error(
     get_layer(id = "WRI_score", aoi = c(-122, 37, -121), aoi_crs = "EPSG:4326"),
     fixed = TRUE,
-    "`aoi` could not be converted to a terra-compatible spatial object."
+    "`aoi` must contain four numeric values: c(xmin, ymin, xmax, ymax)."
   )
+})
+
+test_that("resolve_aoi reads CRS from shapefile paths", {
+  shp <- testthat::test_path("../../inst/demos/data/Eaton_Perimeter_20250121.shp")
+
+  result <- resolve_aoi(shp)
+
+  expect_true(isTRUE(result))
+  expect_equal(attr(result, "type"), "SpatVector")
+  expect_named(attr(result, "bbox"), c("xmin", "ymin", "xmax", "ymax"))
+  expect_true(nzchar(attr(result, "crs")))
 })

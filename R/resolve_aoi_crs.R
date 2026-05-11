@@ -1,53 +1,54 @@
-# Resolve CRS information for an AOI
 resolve_aoi_crs <- function(aoi, aoi_crs = NULL) {
 
-  # NULL AOI means no cropping/global layer
-  if (is.null(aoi)) {
-    return(.make_result(TRUE, aoi = NULL, crs = NULL))
-  }
-
-  # Normalize and validate user-provided CRS, if supplied
   if (!is.null(aoi_crs)) {
 
-    crs_check <- normalize_crs(aoi_crs)
-
-    if (!isTRUE(crs_check)) {
-      return(crs_check)
+    if (is.numeric(aoi_crs)) {
+      aoi_crs <- paste0("EPSG:", as.integer(aoi_crs))
     }
 
-    # Extract normalized CRS string
-    aoi_crs <- attr(crs_check, "crs")
+    if (is.character(aoi_crs) && length(aoi_crs) == 1L && grepl("^[0-9]+$", aoi_crs)) {
+      aoi_crs <- paste0("EPSG:", aoi_crs)
+    }
+
+    crs_valid <- tryCatch(
+      terra::crs(aoi_crs, describe = TRUE),
+      error = function(e) NULL
+    )
+
+    if (is.null(crs_valid) || all(is.na(crs_valid))) {
+      return(.make_result(
+        FALSE,
+        message = "`aoi_crs` is not recognized. Provide an EPSG code, PROJ string, or WKT string."
+      ))
+    }
   }
 
-  # Extract CRS already attached to AOI
-  object_crs <- terra::crs(aoi)
+  #
+  object_crs <- tryCatch(
+    terra::crs(aoi),
+    error = function(e) "" # If crs(aoi) errors,
+  )
 
-  # Check whether AOI already has CRS metadata
+  # Sucessfully found CRS?
   has_object_crs <- nzchar(object_crs)
 
-  # If object has no CRS and user did not provide one,
-  # we cannot interpret coordinates safely
-  if (!has_object_crs && is.null(aoi_crs)) {
-    return(.make_result(
-      FALSE,
-      message = "`aoi` has no CRS. Supply `aoi_crs` or attach a CRS to `aoi`."
-    ))
-  }
-
-  # Prevent conflicting CRS definitions:
-  # user should not provide aoi_crs if object already has CRS
   if (has_object_crs && !is.null(aoi_crs)) {
     return(.make_result(
       FALSE,
-      message = "`aoi` already has a CRS. Do not also provide `aoi_crs`."
+      message = "`aoi` already has a CRS. Do not also supply `aoi_crs`."
     ))
   }
 
-  # If AOI lacks CRS, assign the user-provided CRS
-  if (!has_object_crs) {
-    terra::crs(aoi) <- aoi_crs
-    object_crs <- terra::crs(aoi)
+  if (has_object_crs) {
+    return(.make_result(TRUE, crs = object_crs))
   }
 
-  .make_result(TRUE, aoi = aoi, crs = object_crs)
+  if (!is.null(aoi_crs)) {
+    return(.make_result(TRUE, crs = aoi_crs))
+  }
+
+  .make_result(
+    FALSE,
+    message = "`aoi` has no CRS. Supply `aoi_crs` or attach a CRS to `aoi`."
+  )
 }

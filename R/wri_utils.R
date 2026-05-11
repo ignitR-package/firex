@@ -106,19 +106,19 @@ wri_resolve_stac_path <- function() {
 
   installed_label <- if (nzchar(installed_stac_path)) {
     normalizePath(installed_stac_path, winslash = "/", mustWork = FALSE)
-    } else {
-      "<installed package extdata/stac/catalog.json not found>"
-    }
-
-    stop(
-      "STAC catalog not found.\n\n",
-      "I looked for:\n  ", dev_label, "\n ", installed_label, "\n\n",
-      "Expected locations:\n",
-      "  <pkg_root>/inst/extdata/stac/catalog.json\n",
-      "  <installed firex>/extdata/stac/catalog.json\n",
-      call. = FALSE
-    )
+  } else {
+    "<installed package extdata/stac/catalog.json not found>"
   }
+
+  stop(
+    "STAC catalog not found.\n\n",
+    "I looked for:\n  ", dev_label, "\n ", installed_label, "\n\n",
+    "Expected locations:\n",
+    "  <pkg_root>/inst/extdata/stac/catalog.json\n",
+    "  <installed firex>/extdata/stac/catalog.json\n",
+    call. = FALSE
+  )
+}
 
 # -----------------------------------------------------------------------------
 # RESOLVE HREF (RELATIVE / ABSOLUTE / URL)
@@ -435,6 +435,7 @@ wri_items_df <- function(data) {
                          message = NULL,
                          status = NULL,
                          bbox = NULL,
+                         extent = NULL,
                          crs = NULL,
                          aoi = NULL,
                          type = NULL) {
@@ -443,9 +444,9 @@ wri_items_df <- function(data) {
     message = message,
     status = status,
     bbox = bbox,
+    extent = extent,
     crs = crs,
     aoi = aoi,
     type = type
   )
 }
-

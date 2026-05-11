@@ -31,6 +31,7 @@
 get_layer <- function(id, aoi = NULL, aoi_crs = NULL) {
 
   aoi_poly <- NULL
+  aoi_bbox <- NULL
 
   if (missing(id) || !is.character(id) || length(id) != 1L || !nzchar(id)) {
     stop("`id` must be a single non-empty character string.", call. = FALSE)
@@ -48,6 +49,17 @@ get_layer <- function(id, aoi = NULL, aoi_crs = NULL) {
     }
 
     aoi_poly <- attr(aoi_result, "aoi")
+    aoi_bbox <- attr(aoi_result, "bbox")
+
+    if (!terra::same.crs(attr(aoi_result, "crs"), "EPSG:4326")) {
+      aoi_extent <- terra::ext(terra::project(aoi_poly, "EPSG:4326"))
+      aoi_bbox <- c(
+        xmin = aoi_extent$xmin,
+        ymin = aoi_extent$ymin,
+        xmax = aoi_extent$xmax,
+        ymax = aoi_extent$ymax
+      )
+    }
   }
 
   layer <- layer_info(id)
@@ -55,6 +67,21 @@ get_layer <- function(id, aoi = NULL, aoi_crs = NULL) {
 
   if (nrow(layer) == 0) {
     stop("No raster asset found for layer '", id, "'.", call. = FALSE)
+  }
+
+  if (!is.null(aoi_bbox)) {
+    layer_bbox <- as.numeric(layer[1, c("xmin", "ymin", "xmax", "ymax")])
+    overlap <- check_extent_overlap(aoi_bbox, layer_bbox)
+
+    if (!isTRUE(overlap)) {
+      overlap_message <- attr(overlap, "message")
+
+      if (identical(attr(overlap, "status"), "partial")) {
+        warning(overlap_message, call. = FALSE)
+      } else {
+        stop(overlap_message, call. = FALSE)
+      }
+    }
   }
 
   is_hosted <- tolower(as.character(layer$is_hosted[1])) == "true"

@@ -40,13 +40,20 @@ check_extent_overlap <- function(bbox, layer_bbox) {
 
   if (has_overlap) {
     outside_sides <- c(
-      west  = unname(bbox[1] < layer_bbox[1]),
-      south = unname(bbox[2] < layer_bbox[2]),
-      east  = unname(bbox[3] > layer_bbox[3]),
-      north = unname(bbox[4] > layer_bbox[4])
+      west  = bbox[1] < layer_bbox[1],
+      south = bbox[2] < layer_bbox[2],
+      east  = bbox[3] > layer_bbox[3],
+      north = bbox[4] > layer_bbox[4]
     )
 
-    side_text <- paste(names(outside_sides)[outside_sides], collapse = ", ")
+    side_labels <- c(
+      west = "west (left)",
+      south = "south (bottom)",
+      east = "east (right)",
+      north = "north (top)"
+    )
+
+    side_text <- paste(side_labels[names(outside_sides)[outside_sides]], collapse = ", ")
 
     return(.make_result(
       FALSE,

@@ -12,3 +12,5 @@ R/explore.R
 R/list_layers.R
 R/get_layer.R
 docs
+integration_milestones.md
+kaiju_tests.qmd

@@ -1,15 +1,25 @@
 Package: firex
 Title: Access Wildfire Resilience Index Data
 Version: 0.0.0.9000
-Authors@R: c(person("Emily", "Miller", , "ermiller@ucsb.edu", role = c("aut", "cre")), person("Ixel", "Medrano", , "imedrano@ucsb.edu", role = "aut"), person("Kaiju", "Morquecho", , "kaimorquecho@ucsb.edu", role = "aut"), person("Hylaea", "Miller", , "hylaea@ucsb.edu", role = "aut"))
-Description: Provides access to the Wildfire Resilience Index (WRI) dataset 
-    through cloud-hosted data querying. Allows users to query, subset, and 
-    retrieve high-resolution geospatial layers measuring wildfire resilience 
-    across western U.S. states, British Columbia, and the Yukon.
+Authors@R: c(
+    person("Emily", "Miller", role = "aut"),
+    person("Ixel", "Medrano", role = "aut"),
+    person("Kaiju", "Morquecho", role = "aut"),
+    person("Hylaea", "Miller", role = "aut"),
+    person("Caitlin", "Fong", "fong@nceas.ucsb.edu", role = "cre"),
+    person("National Center for Ecological Analysis and Synthesis (NCEAS)", role = "cph")
+  )
+Description: Provides access to the Wildfire Resilience Index (WRI)
+    dataset through cloud-hosted data querying. Allows users to query,
+    subset, and retrieve high-resolution geospatial layers measuring
+    wildfire resilience across western U.S. states, British Columbia, and
+    the Yukon.
 License: MIT + file LICENSE
-Encoding: UTF-8
-Roxygen: list(markdown = TRUE)
-RoxygenNote: 7.3.3
+URL: https://ignitr-package.github.io/firex/,
+    https://github.com/ignitR-package/firex
+Imports:
+    terra,
+    rstac
 Suggests:
     knitr,
     rmarkdown,
@@ -18,7 +28,5 @@ Suggests:
     tictoc
 VignetteBuilder: knitr
 Config/testthat/edition: 3
-Imports:
-    terra,
-    rstac
-URL: https://ignitr-package.github.io/firex/
+Encoding: UTF-8
+RoxygenNote: 7.3.3

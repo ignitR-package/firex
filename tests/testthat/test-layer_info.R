@@ -56,3 +56,10 @@ test_that("layer_info returns correct layer id", {
   result <- layer_info("WRI_score")
   expect_equal(result$id, "WRI_score")
 })
+
+test_that("layer_info returns finite layer bbox fields", {
+  result <- layer_info("WRI_score")
+  bbox <- as.numeric(result[1, c("xmin", "ymin", "xmax", "ymax")])
+
+  expect_true(all(is.finite(bbox)))
+})

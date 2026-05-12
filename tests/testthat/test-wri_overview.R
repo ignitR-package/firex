@@ -30,6 +30,13 @@ test_that("wri_overview wri_df is a data frame", {
   expect_s3_class(result$wri_df, "data.frame")
 })
 
+test_that("wri_overview_df returns required layer columns", {
+  result <- wri_overview_df()
+
+  expect_s3_class(result, "data.frame")
+  expect_true(all(c("id", "asset_href", "xmin", "ymin", "xmax", "ymax") %in% names(result)))
+})
+
 test_that("wri_overview wri_df has rows", {
   result <- wri_overview()
   expect_gt(nrow(result$wri_df), 0)

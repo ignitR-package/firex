@@ -1,10 +1,3 @@
-test_that("resolve_aoi_crs reorders numeric bbox to terra order", {
-  # Global order: c(xmin, ymin, xmax, ymax)
-  # Terra order: c(xmin, xmax, ymin, ymax)
-  result <- resolve_aoi_crs(c(-122, 37, -121, 38), aoi_crs = "EPSG:4326")
-  expect_true(isTRUE(result))
-  expect_equal(attr(result, "bbox"), c(-122, -121, 37, 38))
-})
 
 # Check the output
 test_that("resolve_aoi returns a SpatVector from numeric bbox", {

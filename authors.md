@@ -2,7 +2,7 @@
 
 ## Authors
 
-- **Emily Miller**. Author, maintainer.
+- **Emily Miller**. Author.
 
 - **Ixel Medrano**. Author.
 
@@ -10,7 +10,15 @@
 
 - **Hylaea Miller**. Author.
 
+- **Caitlin Fong**. Maintainer.
+
+- **National Center for Ecological Analysis and Synthesis (NCEAS)**.
+  Copyright holder.
+
 ## Citation
+
+Source:
+[`inst/CITATION`](https://github.com/ignitR-package/firex/blob/main/inst/CITATION)
 
 Medrano, I. Miller, H., Morquecho, K., Miller, E. (2026). firex: Access
 Wildfire Resilience Index Data. R package version 0.0.0.9000.

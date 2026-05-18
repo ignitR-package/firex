@@ -12,7 +12,7 @@ layer_info(layer_id, fresh = TRUE)
 
 - layer_id:
 
-  Character. The layer/item id to look up, e.g. `"WRI_score"`.
+  Character. The layer/item id to look up, e.g. \`"WRI_score"\`.
 
 - fresh:
 

@@ -1,10 +1,7 @@
 # Get a WRI raster layer
 
 Retrieves a hosted WRI raster asset and optionally crops it to a spatial
-area of interest. The area of interest can be supplied in several
-formats: a numeric bounding box, a file path to a shapefile or GeoJSON,
-an `sf` object, or a `terra` spatial object (`SpatVector`, `SpatRaster`,
-or `SpatExtent`).
+area of interest.
 
 ## Usage
 
@@ -16,62 +13,43 @@ get_layer(id, aoi = NULL, aoi_crs = NULL)
 
 - id:
 
-  Character. Layer id to retrieve. See
-  [`wri_overview_df`](https://ignitr-package.github.io/firex/reference/wri_overview_df.md)
-  for available ids.
+  Character. Layer id to retrieve. See \[wri_overview_df()\] for
+  available ids.
 
 - aoi:
 
-  Area of interest used to crop the layer. Accepted inputs:
+  Optional area of interest used to crop the layer. Accepted inputs:
 
-  - `NULL` — returns the full global layer (default).
+  - \`NULL\`, to return the full layer.
 
-  - Numeric vector `c(xmin, ymin, xmax, ymax)` — bounding box; `aoi_crs`
-    is required.
+  - Numeric vector \`c(xmin, ymin, xmax, ymax)\`.
 
-  - Character path to a shapefile (`.shp`) or GeoJSON file.
+  - Character file path readable by \`terra::vect()\` or
+    \`terra::rast()\`, such as a shapefile, GeoJSON, GeoPackage, or
+    raster file.
 
-  - An `sf` or `sfc` object.
+  - \`terra\` objects: \`SpatVector\`, \`SpatRaster\`, \`SpatExtent\`,
+    \`SpatVectorProxy\`, \`SpatVectorCollection\`,
+    \`SpatRasterCollection\`, or \`SpatRasterDataset\`.
 
-  - A
-    [`terra::SpatVector`](https://rspatial.github.io/terra/reference/SpatVector-class.html),
-    [`terra::SpatRaster`](https://rspatial.github.io/terra/reference/SpatRaster-class.html),
-    or
-    [`terra::SpatExtent`](https://rspatial.github.io/terra/reference/SpatExtent-class.html).
+  - \`sf\` or \`sfc\` objects.
+
+  - \`sp\` spatial objects.
+
+  - \`raster\` package objects: \`RasterLayer\`, \`RasterStack\`,
+    \`RasterBrick\`, or \`Extent\`.
+
+  - A \`bbox\` object or matrix accepted by \`terra::ext()\`.
+
+  CRS-less AOIs, such as numeric bounding boxes and extents, require
+  \`aoi_crs\`.
 
 - aoi_crs:
 
-  Character or integer CRS specification (e.g. `"EPSG:4326"` or `4326`).
-  Required when `aoi` is a numeric bounding box or a CRS-less spatial
-  object; must be omitted when `aoi` already carries a CRS.
+  Optional character or integer CRS specification for \`aoi\`, such as
+  \`"EPSG:4326"\` or \`4326\`.
 
 ## Value
 
-A
-[`terra::SpatRaster`](https://rspatial.github.io/terra/reference/SpatRaster-class.html)
-cropped to `aoi`, or the full layer when `aoi = NULL`.
-
-## See also
-
-[`resolve_to_bbox`](https://ignitr-package.github.io/firex/reference/resolve_to_bbox.md),
-[`normalize_crs`](https://ignitr-package.github.io/firex/reference/normalize_crs.md),
-[`wri_overview_df`](https://ignitr-package.github.io/firex/reference/wri_overview_df.md)
-
-## Examples
-
-``` r
-if (FALSE) { # \dontrun{
-# Full layer
-wri <- get_layer("WRI_score")
-
-# Numeric bbox (WGS 84)
-wri_norcal <- get_layer("WRI_score",
-                        aoi     = c(-122, 37, -121, 38),
-                        aoi_crs = "EPSG:4326")
-
-# Shapefile path
-shp <- system.file("demos/data/Eaton_Perimeter_20250121.shp",
-                   package = "firex")
-wri_eaton <- get_layer("WRI_score", aoi = shp)
-} # }
-```
+A \[terra::SpatRaster\] cropped to \`aoi\`, or the full layer when \`aoi
+= NULL\`.

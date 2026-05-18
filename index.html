@@ -7,8 +7,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <title>Access Wildfire Resilience Index Data • firex</title>
 <script src="deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-<link href="deps/bootstrap-5.3.1/bootstrap.min.css" rel="stylesheet">
-<script src="deps/bootstrap-5.3.1/bootstrap.bundle.min.js"></script><link href="deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
+<link href="deps/bootstrap-5.3.8/bootstrap.min.css" rel="stylesheet">
+<script src="deps/bootstrap-5.3.8/bootstrap.bundle.min.js"></script><link href="deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
 <link href="deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet">
 <script src="deps/headroom-0.11.0/headroom.min.js"></script><script src="deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="deps/search-1.0.0/fuse.min.js"></script><script src="deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="pkgdown.js"></script><meta property="og:title" content="Access Wildfire Resilience Index Data">
 <meta name="description" content="Provides access to the Wildfire Resilience Index (WRI) dataset through cloud-hosted data querying. Allows users to query, subset, and retrieve high-resolution geospatial layers measuring wildfire resilience across western U.S. states, British Columbia, and the Yukon.">
@@ -37,6 +37,7 @@
 <li class="nav-item"><form class="form-inline" role="search">
  <input class="form-control" type="search" name="search-input" id="search-input" autocomplete="off" aria-label="Search site" placeholder="Search for" data-search-index="search.json">
 </form></li>
+<li class="nav-item"><a class="external-link nav-link" href="https://github.com/ignitR-package/firex/" aria-label="GitHub"><span class="fa fab fa-github fa-lg"></span></a></li>
       </ul>
 </div>
 
@@ -45,60 +46,118 @@
 </nav><div class="container template-home">
 <div class="row">
   <main id="main" class="col-md-9"><div class="section level1">
-<div class="page-header"><h1 id="firex-r-package">firex R Package<a class="anchor" aria-label="anchor" href="#firex-r-package"></a>
+<div class="page-header"><h1 id="firex-r-package">
+<code>firex</code> R Package<a class="anchor" aria-label="anchor" href="#firex-r-package"></a>
 </h1></div>
-<p>This package provides utilities for querying a local STAC catalog and retrieving asset information, designed for wildfire resilience data workflows.</p>
+<p>Access the Western Wildfire Resilience Index from R without downloading the full dataset.</p>
+<p>firex connects to 82 wildfire resilience raster layers hosted as Cloud-Optimized GeoTIFFs (COGs) on the Knowledge Network for Biocomplexity (KNB). Users can browse the catalog, inspect layer metadata, and retrieve spatial subsets by bounding box or polygon boundary — no local storage of the full archive (~25 GB) required.</p>
 <div class="section level2">
-<h2 id="key-features">Key Features<a class="anchor" aria-label="anchor" href="#key-features"></a>
-</h2>
-<ul>
-<li>Hard-coded local STAC catalog path</li>
-<li>Functions to list, filter, and extract properties from STAC items</li>
-<li>Asset URL extraction for COG and other file types</li>
-<li>Ready for extension to remote STAC APIs and COG tile retrieval</li>
-</ul>
-</div>
-<div class="section level2">
-<h2 id="development-workflow">Development Workflow<a class="anchor" aria-label="anchor" href="#development-workflow"></a>
-</h2>
-<ul>
-<li>Use <code>devtools::document()</code> to generate documentation</li>
-<li>Use <code>devtools::check()</code> to run package checks</li>
-<li>Use <code>testthat</code> for unit testing</li>
-<li>Use <code>usethis::use_r()</code> to add new R scripts</li>
-<li>Use <code>pkgdown</code> to build package website</li>
-</ul>
-</div>
-<div class="section level2">
-<h2 id="example-usage">Example Usage<a class="anchor" aria-label="anchor" href="#example-usage"></a>
+<h2 id="installation">Installation<a class="anchor" aria-label="anchor" href="#installation"></a>
 </h2>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span><span class="st">"remotes"</span><span class="op">)</span></span>
+<span><span class="fu">remotes</span><span class="fu">::</span><span class="fu">install_github</span><span class="op">(</span><span class="st">"ignitR-package/firex"</span><span class="op">)</span></span></code></pre></div>
+</div>
+<div class="section level2">
+<h2 id="quick-start">Quick start<a class="anchor" aria-label="anchor" href="#quick-start"></a>
+</h2>
+<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://ignitr-package.github.io/firex/">firex</a></span><span class="op">)</span></span>
+<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://rspatial.org/" class="external-link">terra</a></span><span class="op">)</span></span>
 <span></span>
-<span><span class="co"># Browse the catalog — see all domains, dimensions, and available layers</span></span>
+<span><span class="co"># Browse all 82 available layers</span></span>
 <span><span class="fu"><a href="reference/wri_overview.html">wri_overview</a></span><span class="op">(</span><span class="op">)</span></span>
 <span></span>
-<span><span class="co"># Get the full catalog as a data frame (one row per asset)</span></span>
-<span><span class="va">df</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/wri_overview_df.html">wri_overview_df</a></span><span class="op">(</span><span class="op">)</span></span>
-<span></span>
-<span><span class="co"># Look up metadata for a specific layer</span></span>
+<span><span class="co"># Get metadata for a specific layer</span></span>
 <span><span class="fu"><a href="reference/layer_info.html">layer_info</a></span><span class="op">(</span><span class="st">"WRI_score"</span><span class="op">)</span></span>
 <span></span>
-<span><span class="co"># Retrieve a raster layer (full extent)</span></span>
-<span><span class="va">rast</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/get_layer.html">get_layer</a></span><span class="op">(</span><span class="st">"WRI_score"</span><span class="op">)</span></span>
+<span><span class="co"># Retrieve the WRI composite score for Santa Barbara County, CA</span></span>
+<span><span class="va">wri</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/get_layer.html">get_layer</a></span><span class="op">(</span><span class="st">"WRI_score"</span>,</span>
+<span>                  aoi     <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="op">-</span><span class="fl">120.7</span>, <span class="fl">34.4</span>, <span class="op">-</span><span class="fl">119.4</span>, <span class="fl">35.1</span><span class="op">)</span>,</span>
+<span>                  aoi_crs <span class="op">=</span> <span class="st">"EPSG:4326"</span><span class="op">)</span></span>
 <span></span>
-<span><span class="co"># Retrieve a raster layer cropped to a bounding box (xmin, ymin, xmax, ymax)</span></span>
-<span><span class="va">bbox</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="op">-</span><span class="fl">122</span>, <span class="fl">37</span>, <span class="op">-</span><span class="fl">121</span>, <span class="fl">38</span><span class="op">)</span></span>
-<span><span class="va">rast</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/get_layer.html">get_layer</a></span><span class="op">(</span><span class="st">"WRI_score"</span>, bbox <span class="op">=</span> <span class="va">bbox</span><span class="op">)</span></span>
-<span></span>
-<span><span class="co"># Query STAC items by property</span></span>
-<span><span class="va">catalog</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/wri_overview.html">wri_overview</a></span><span class="op">(</span><span class="op">)</span></span>
-<span><span class="va">items</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">lapply</a></span><span class="op">(</span><span class="va">catalog</span><span class="op">$</span><span class="va">data</span><span class="op">$</span><span class="va">items</span>, <span class="kw">function</span><span class="op">(</span><span class="va">x</span><span class="op">)</span> <span class="va">x</span><span class="op">$</span><span class="va">item</span><span class="op">)</span></span>
-<span><span class="va">water_status</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/query_stac_flexible.html">query_stac_flexible</a></span><span class="op">(</span><span class="va">items</span>, wri_domain <span class="op">=</span> <span class="st">"water"</span>, data_type <span class="op">=</span> <span class="st">"status"</span><span class="op">)</span></span></code></pre></div>
-<p>See <a href="https://r-pkgs.org/whole-game.html" class="external-link">r-pkgs.org</a> for best practices.</p>
+<span><span class="fu"><a href="https://rspatial.github.io/terra/reference/plot.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">wri</span>, col <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/grDevices/palettes.html" class="external-link">hcl.colors</a></span><span class="op">(</span><span class="fl">100</span>, <span class="st">"YlOrRd"</span>, rev <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
+</div>
+<div class="section level2">
+<h2 id="core-functions">Core functions<a class="anchor" aria-label="anchor" href="#core-functions"></a>
+</h2>
+<table class="table">
+<colgroup>
+<col width="50%">
+<col width="50%">
+</colgroup>
+<thead><tr>
+<th>Function</th>
+<th>Description</th>
+</tr></thead>
+<tbody>
+<tr>
+<td><code><a href="reference/wri_overview.html">wri_overview()</a></code></td>
+<td>Print a structured summary of all 82 layers</td>
+</tr>
+<tr>
+<td><code><a href="reference/wri_overview_df.html">wri_overview_df()</a></code></td>
+<td>Return the catalog as a data frame for filtering</td>
+</tr>
+<tr>
+<td><code>layer_info(id)</code></td>
+<td>Retrieve full metadata for a single layer</td>
+</tr>
+<tr>
+<td><code>get_layer(id, aoi, aoi_crs)</code></td>
+<td>Download a spatial subset of a layer</td>
+</tr>
+</tbody>
+</table>
+<p><code><a href="reference/get_layer.html">get_layer()</a></code> accepts numeric bounding boxes, shapefile or GeoJSON file paths, <code>sf</code> objects, <code>SpatVector</code>, <code>SpatRaster</code>, and <code>SpatExtent</code> as <code>aoi</code>. For inputs without an embedded CRS (numeric vectors and <code>SpatExtent</code>), supply <code>aoi_crs</code>.</p>
+</div>
+<div class="section level2">
+<h2 id="repository-structure">Repository structure<a class="anchor" aria-label="anchor" href="#repository-structure"></a>
+</h2>
+<pre><code>firex/
+├── R/                    # Package functions
+├── man/                  # Auto-generated documentation (do not edit)
+├── inst/
+│   ├── extdata/stac/     # Bundled STAC catalog (catalog.json + item JSONs)
+│   └── demos/            # Demo data and example scripts
+├── tests/testthat/       # Unit tests
+├── DESCRIPTION           # Package metadata and dependencies
+├── NAMESPACE             # Exported functions (auto-generated)
+└── README.md</code></pre>
+<p><code>man/</code> and <code>inst/</code> follow standard R package conventions and are required by the build system. <code>man/</code> is generated by roxygen2 and should not be edited directly.</p>
+</div>
+<div class="section level2">
+<h2 id="documentation">Documentation<a class="anchor" aria-label="anchor" href="#documentation"></a>
+</h2>
+<p>Full documentation and vignettes: <a href="https://ignitr-package.github.io/firex/" class="uri">https://ignitr-package.github.io/firex/</a></p>
+</div>
+<div class="section level2">
+<h2 id="data">Data<a class="anchor" aria-label="anchor" href="#data"></a>
+</h2>
+<p>The WWRI dataset is produced by NCEAS and funded by the Gordon and Betty Moore Foundation. The COG archive is hosted on KNB at <a href="https://knb.ecoinformatics.org/data/wri-data-processing/cogs/" class="external-link uri">https://knb.ecoinformatics.org/data/wri-data-processing/cogs/</a>. A persistent DOI will be assigned following formal publication of the underlying dataset.</p>
+</div>
+<div class="section level2">
+<h2 id="authors">Authors<a class="anchor" aria-label="anchor" href="#authors"></a>
+</h2>
+<p>Ixel Medrano, Emily Miller, Hylaea Miller, Kaiju Morquecho<br>
+Bren School of Environmental Science and Management, UC Santa Barbara</p>
+<p>Client: Dr. Caitlin Fong (NCEAS)<br>
+Advisors: Dr. Max Czapanskiy, Dr. Carmen Galaz-García</p>
+</div>
+<div class="section level2">
+<h2 id="license">License<a class="anchor" aria-label="anchor" href="#license"></a>
+</h2>
+<p>MIT</p>
 </div>
 </div>
-  </main><aside class="col-md-3"><div class="license">
+  </main><aside class="col-md-3"><div class="links">
+<h2 data-toc-skip>Links</h2>
+<ul class="list-unstyled">
+<li><a href="https://github.com/ignitR-package/firex/" class="external-link">Browse source code</a></li>
+</ul>
+</div>
+
+<div class="license">
 <h2 data-toc-skip>License</h2>
 <ul class="list-unstyled">
 <li><a href="LICENSE.html">Full license</a></li>
@@ -117,10 +176,12 @@
 <div class="developers">
 <h2 data-toc-skip>Developers</h2>
 <ul class="list-unstyled">
-<li>Emily Miller <br><small class="roles"> Author, maintainer </small>   </li>
+<li>Emily Miller <br><small class="roles"> Author </small>   </li>
 <li>Ixel Medrano <br><small class="roles"> Author </small>   </li>
 <li>Kaiju Morquecho <br><small class="roles"> Author </small>   </li>
 <li>Hylaea Miller <br><small class="roles"> Author </small>   </li>
+<li>Caitlin Fong <br><small class="roles"> Maintainer </small>   </li>
+<li><a href="authors.html">More about authors...</a></li>
 </ul>
 </div>
 
@@ -131,7 +192,7 @@
 
 
     <footer><div class="pkgdown-footer-left">
-  <p>Developed by Emily Miller, Ixel Medrano, Kaiju Morquecho, Hylaea Miller.</p>
+  <p>Developed by Emily Miller, Ixel Medrano, Kaiju Morquecho, Hylaea Miller, Caitlin Fong.</p>
 </div>
 
 <div class="pkgdown-footer-right">

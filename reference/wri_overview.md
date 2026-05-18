@@ -1,6 +1,6 @@
 # Read the WRI STAC catalog
 
-Reads the local STAC catalog and returns a `wri_overview` object.
+Reads the local STAC catalog and returns a \`wri_overview\` object.
 
 ## Usage
 
@@ -17,4 +17,4 @@ wri_overview(fresh = TRUE)
 
 ## Value
 
-An object of class `wri_overview`.
+An object of class \`wri_overview\`.

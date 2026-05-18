@@ -59,7 +59,7 @@ supply `aoi_crs`.
     ├── R/                    # Package functions
     ├── man/                  # Auto-generated documentation (do not edit)
     ├── inst/
-    │   ├── extdata/stac/     # Bundled STAC catalog (catalog.json + item JSONs)
+    │   ├── stac/             # Bundled STAC catalog, collection, and item JSONs
     │   └── demos/            # Demo data and example scripts
     ├── tests/testthat/       # Unit tests
     ├── DESCRIPTION           # Package metadata and dependencies

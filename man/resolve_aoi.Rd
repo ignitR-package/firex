@@ -7,21 +7,21 @@
 resolve_aoi(aoi, aoi_crs = NULL)
 }
 \arguments{
-\item{aoi}{Area of interest. Accepted inputs include \code{NULL}, a numeric vector
-\code{c(xmin, ymin, xmax, ymax)}, a character file path readable by
-\code{terra::vect()} or \code{terra::rast()}, or an object supported by
-\code{terra::ext()}.}
+\item{aoi}{Area of interest. Accepted inputs include `NULL`, a numeric vector
+`c(xmin, ymin, xmax, ymax)`, a character file path readable by
+`terra::vect()` or `terra::rast()`, or an object supported by
+`terra::ext()`.}
 
-\item{aoi_crs}{Optional character or integer CRS specification for \code{aoi},
-such as \code{"EPSG:4326"} or \code{4326}.}
+\item{aoi_crs}{Optional character or integer CRS specification for `aoi`,
+such as `"EPSG:4326"` or `4326`.}
 }
 \value{
 A length-1 logical with result metadata stored in attributes,
-including \code{"aoi"}, \code{"bbox"}, \code{"extent"}, \code{"crs"}, \code{"type"}, and
-\code{"message"} when validation fails.
+  including `"aoi"`, `"bbox"`, `"extent"`, `"crs"`, `"type"`, and
+  `"message"` when validation fails.
 }
 \description{
-Converts supported area-of-interest inputs to a \code{terra} polygon, bounding
+Converts supported area-of-interest inputs to a `terra` polygon, bounding
 box, extent, and CRS.
 }
 \keyword{internal}

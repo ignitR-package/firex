@@ -1,3 +1,6 @@
+# Full containment -------------------------------------------------------------
+
+# A bbox fully inside the layer extent should pass without a message.
 test_that("check_extent_overlap returns inside for contained bboxes", {
   layer_bbox <- c(-146.2082, 19.1074, 173.7109, 54.8056)
 
@@ -8,6 +11,7 @@ test_that("check_extent_overlap returns inside for contained bboxes", {
   expect_null(attr(result, "message"))
 })
 
+# Exact boundary equality should count as fully inside.
 test_that("check_extent_overlap treats equal extents as inside", {
   layer_bbox <- c(-146.2082, 19.1074, 173.7109, 54.8056)
 
@@ -17,6 +21,7 @@ test_that("check_extent_overlap treats equal extents as inside", {
   expect_equal(attr(result, "status"), "inside")
 })
 
+# Partial overlap should identify the specific side that exceeds the layer.
 test_that("check_extent_overlap reports each partial-overlap side", {
   layer_bbox <- c(-146.2082, 19.1074, 173.7109, 54.8056)
 
@@ -36,6 +41,7 @@ test_that("check_extent_overlap reports each partial-overlap side", {
   }
 })
 
+# A bbox with no spatial intersection should return status "none".
 test_that("check_extent_overlap returns none when bbox does not overlap", {
   layer_bbox <- c(-146.2082, 19.1074, 173.7109, 54.8056)
 
@@ -46,6 +52,7 @@ test_that("check_extent_overlap returns none when bbox does not overlap", {
   expect_match(attr(result, "message"), "does not overlap")
 })
 
+# Touching at an edge is not enough overlap to crop a meaningful area.
 test_that("check_extent_overlap treats edge-touching outside bboxes as no overlap", {
   layer_bbox <- c(-146.2082, 19.1074, 173.7109, 54.8056)
 

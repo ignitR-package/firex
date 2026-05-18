@@ -7,7 +7,7 @@
 \method{print}{wri_overview}(x, ...)
 }
 \arguments{
-\item{x}{A \code{wri_overview} object.}
+\item{x}{A `wri_overview` object.}
 
 \item{...}{Additional arguments passed to the S3 method. Currently unused.}
 }
@@ -16,5 +16,5 @@ Called for its side effect of printing a summary.
 }
 \description{
 Prints a compact summary of collections and layer metadata for a
-\code{wri_overview} object.
+`wri_overview` object.
 }

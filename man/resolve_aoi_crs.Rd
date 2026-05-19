@@ -10,12 +10,12 @@ resolve_aoi_crs(aoi, aoi_crs = NULL)
 \item{aoi}{Area of interest to inspect for an existing CRS.}
 
 \item{aoi_crs}{Optional character or integer CRS specification, such as
-\code{"EPSG:4326"} or \code{4326}.}
+`"EPSG:4326"` or `4326`.}
 }
 \value{
-A length-1 logical with the resolved CRS stored in the \code{"crs"}
-attribute on success, or a validation message stored in \code{"message"} on
-failure.
+A length-1 logical with the resolved CRS stored in the `"crs"`
+  attribute on success, or a validation message stored in `"message"` on
+  failure.
 }
 \description{
 Validates a supplied CRS and checks whether an area-of-interest object already

@@ -6,7 +6,7 @@ Authors@R: c(
     person("Ixel", "Medrano", role = "aut"),
     person("Kaiju", "Morquecho", role = "aut"),
     person("Hylaea", "Miller", role = "aut"),
-    person("Caitlin", "Fong", "fong@nceas.ucsb.edu", role = "cre"),
+    person("Caitlin", "Fong", email = "fong@nceas.ucsb.edu", role = "cre"),
     person("National Center for Ecological Analysis and Synthesis (NCEAS)", role = "cph")
   )
 Description: Provides access to the Wildfire Resilience Index (WRI)

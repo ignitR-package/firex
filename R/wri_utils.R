@@ -100,7 +100,7 @@ wri_get_pkg_path <- function() {
 
 #' Resolve the local STAC catalog path
 #'
-#' @return A normalized path to `inst/extdata/stac/catalog.json`.
+#' @return A normalized path to `inst/stac/catalog.json`.
 #' @keywords internal
 #' @noRd
 wri_resolve_stac_path <- function() {
@@ -110,10 +110,10 @@ wri_resolve_stac_path <- function() {
     error = function(e) NA_character_
   )
 
-  # First look for a catalog in the package's inst/extdata/stac/ directory (dev mode)
+  # First look for a catalog in the package's inst/stac/ directory (dev mode)
   dev_stac_path <- if (!is.na(pkg_path) && nzchar(pkg_path)) {
     normalizePath(
-      file.path(pkg_path, "inst", "extdata", "stac", "catalog.json"),
+      file.path(pkg_path, "inst", "stac", "catalog.json"),
       winslash = "/",
       mustWork = FALSE
     )
@@ -121,7 +121,7 @@ wri_resolve_stac_path <- function() {
     NA_character_
   }
 
-  installed_stac_path <- system.file("extdata", "stac", "catalog.json", package = "firex")
+  installed_stac_path <- system.file("stac", "catalog.json", package = "firex")
 
   if (!is.na(dev_stac_path) && file.exists(dev_stac_path)) {
     return(dev_stac_path)
@@ -140,15 +140,15 @@ wri_resolve_stac_path <- function() {
   installed_label <- if (nzchar(installed_stac_path)) {
     normalizePath(installed_stac_path, winslash = "/", mustWork = FALSE)
   } else {
-    "<installed package extdata/stac/catalog.json not found>"
+    "<installed package stac/catalog.json not found>"
   }
 
   stop(
     "STAC catalog not found.\n\n",
     "I looked for:\n  ", dev_label, "\n ", installed_label, "\n\n",
     "Expected locations:\n",
-    "  <pkg_root>/inst/extdata/stac/catalog.json\n",
-    "  <installed firex>/extdata/stac/catalog.json\n",
+    "  <pkg_root>/inst/stac/catalog.json\n",
+    "  <installed firex>/stac/catalog.json\n",
     call. = FALSE
   )
 }

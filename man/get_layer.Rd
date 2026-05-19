@@ -7,33 +7,33 @@
 get_layer(id, aoi = NULL, aoi_crs = NULL)
 }
 \arguments{
-\item{id}{Character. Layer id to retrieve. See \code{\link[=wri_overview_df]{wri_overview_df()}} for
+\item{id}{Character. Layer id to retrieve. See [wri_overview_df()] for
 available ids.}
 
 \item{aoi}{Optional area of interest used to crop the layer. Accepted inputs:
 \itemize{
-\item \code{NULL}, to return the full layer.
-\item Numeric vector \code{c(xmin, ymin, xmax, ymax)}.
-\item Character file path readable by \code{terra::vect()} or \code{terra::rast()},
+\item `NULL`, to return the full layer.
+\item Numeric vector `c(xmin, ymin, xmax, ymax)`.
+\item Character file path readable by `terra::vect()` or `terra::rast()`,
 such as a shapefile, GeoJSON, GeoPackage, or raster file.
-\item \code{terra} objects: \code{SpatVector}, \code{SpatRaster}, \code{SpatExtent},
-\code{SpatVectorProxy}, \code{SpatVectorCollection}, \code{SpatRasterCollection}, or
-\code{SpatRasterDataset}.
-\item \code{sf} or \code{sfc} objects.
-\item \code{sp} spatial objects.
-\item \code{raster} package objects: \code{RasterLayer}, \code{RasterStack},
-\code{RasterBrick}, or \code{Extent}.
-\item A \code{bbox} object or matrix accepted by \code{terra::ext()}.
+\item `terra` objects: `SpatVector`, `SpatRaster`, `SpatExtent`,
+`SpatVectorProxy`, `SpatVectorCollection`, `SpatRasterCollection`, or
+`SpatRasterDataset`.
+\item `sf` or `sfc` objects.
+\item `sp` spatial objects.
+\item `raster` package objects: `RasterLayer`, `RasterStack`,
+`RasterBrick`, or `Extent`.
+\item A `bbox` object or matrix accepted by `terra::ext()`.
 }
 CRS-less AOIs, such as numeric bounding boxes and extents, require
-\code{aoi_crs}.}
+`aoi_crs`.}
 
-\item{aoi_crs}{Optional character or integer CRS specification for \code{aoi},
-such as \code{"EPSG:4326"} or \code{4326}.}
+\item{aoi_crs}{Optional character or integer CRS specification for `aoi`,
+such as `"EPSG:4326"` or `4326`.}
 }
 \value{
-A \link[terra:SpatRaster-class]{terra::SpatRaster} cropped to \code{aoi}, or the full layer when
-\code{aoi = NULL}.
+A [terra::SpatRaster] cropped to `aoi`, or the full layer when
+  `aoi = NULL`.
 }
 \description{
 Retrieves a hosted WRI raster asset and optionally crops it to a spatial

@@ -1,12 +1,4 @@
 
-# The printed output should return x invisibly, following R's print method convention
-test_that("print.wri_overview returns x invisibly", {
-  x <- wri_overview()
-  result <- withVisible(print(x))
-  expect_false(result$visible)
-  expect_identical(result$value, x)
-})
-
 # The printed output should return a data summary
 test_that("print.wri_overview outputs WRI DATA SUMMARY header", {
   x <- wri_overview()

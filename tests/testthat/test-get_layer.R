@@ -49,6 +49,25 @@ test_that("get_layer reaches layer lookup after valid AOI validation", {
   )
 })
 
+# get_layer should reject non-character id
+test_that("get_layer rejects non-character id", {
+  expect_error(
+    get_layer(123),
+    "`id` must be a single non-empty character string.",
+    fixed = TRUE
+  )
+})
+
+# get_layer should reject empty string id
+test_that("get_layer rejects empty string id", {
+  expect_error(
+    get_layer(""),
+    "`id` must be a single non-empty character string.",
+    fixed = TRUE
+  )
+})
+
+
 # Remote integration tests -----------------------------------------------------
 
 # Remote COG tests are opt-in because they depend on network/GDAL availability.

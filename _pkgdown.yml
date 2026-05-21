@@ -2,3 +2,11 @@ url: https://ignitr-package.github.io/firex/
 template:
   bootstrap: 5
 
+articles:
+- title: Vignettes
+  navbar: ~
+  contents:
+  - discovering-available-layers
+  - retrieving-layer-bounding-box
+  - spatial-objects-aoi
+  - comparing-layers-across-domains

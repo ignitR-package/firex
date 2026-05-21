@@ -1,0 +1,115 @@
+---
+title: "Comparing Layers Across Domains"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Comparing Layers Across Domains}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>", eval = FALSE)
+
+figure_path <- function(filename) {
+  source_path <- file.path("..", "inst", "figures", filename)
+  if (file.exists(source_path)) {
+    return(source_path)
+  }
+
+  installed_path <- system.file("figures", filename, package = "firex")
+  if (!nzchar(installed_path)) {
+    stop("Could not find figure: ", filename)
+  }
+  installed_path
+}
+```
+
+The WRI measures resilience across eight domains: air quality,
+communities, infrastructure, livelihoods, natural habitats, sense of
+place, species, and water. Each domain has status, resistance,
+resilience, and recovery layers. This vignette shows how to retrieve
+several layers for the same area and compare them.
+
+Start by browsing the catalog to identify the layers you want:
+
+```{r}
+library(firex)
+library(terra)
+
+# Get the full catalog as a data frame
+df <- wri_overview_df()
+
+# List all water-domain layers
+subset(
+  df,
+  wri_domain == "water",
+  select = c(id, wri_dimension, data_type)
+)
+#>                                      id wri_dimension data_type
+#> 75                   water_domain_score  domain_score aggregate
+#> 76                     water_resilience    resilience aggregate
+#> 77                     water_resistance    resistance aggregate
+#> 80                         water_status        status aggregate
+#> 81  water_status_surface_water_quantity        status indicator
+#> 82    water_status_surface_water_timing        status indicator
+```
+
+Retrieve two domain-level layers for the same area and compare them side
+by side. The output of `get_layer()` is a terra `SpatRaster`, so
+standard terra operations work directly:
+
+```{r}
+# Santa Barbara County, CA in WGS84
+sb_bbox <- c(-120.7, 34.4, -119.4, 35.1)
+
+water <- get_layer(
+  "water_domain_score",
+  aoi = sb_bbox,
+  aoi_crs = "EPSG:4326"
+)
+
+air <- get_layer(
+  "air_quality_domain_score",
+  aoi = sb_bbox,
+  aoi_crs = "EPSG:4326"
+)
+
+# Stack layers and plot together
+stack <- c(water, air)
+names(stack) <- c("Water domain", "Air quality domain")
+plot(stack, col = hcl.colors(100, "YlOrRd", rev = TRUE))
+
+# Compute pixel-level correlation between domains
+cor(values(water), values(air), use = "complete.obs")
+#> [1] 0.41
+```
+
+You can retrieve any number of layers this way. For systematic
+comparisons, use `lapply()` to iterate over a vector of layer IDs:
+
+```{r}
+# Retrieve all aggregate water-domain layers
+water_ids <- subset(
+  df,
+  wri_domain == "water" & data_type == "aggregate"
+)$id
+
+water_layers <- lapply(
+  water_ids,
+  get_layer,
+  aoi = sb_bbox,
+  aoi_crs = "EPSG:4326"
+)
+
+names(water_layers) <- water_ids
+
+# Inspect dimensions to confirm all layers are aligned
+sapply(water_layers, terra::dim)
+```
+
+```{r fig6, echo=FALSE, eval=TRUE, out.width="100%", fig.cap="Figure 6. Four aggregate water-domain layers retrieved for Santa Barbara County, CA using the same bounding box and iterated with lapply(). Each panel is a SpatRaster in EPSG:5070; colour scales differ by layer."}
+knitr::include_graphics(figure_path("fig6_water_domains.png"))
+```
+
+The figure is generated from the reproducible script
+`inst/figures/fig6_water_domains.R`.

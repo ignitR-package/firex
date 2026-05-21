@@ -1,4 +1,4 @@
 # License
 
     YEAR: 2026
-    COPYRIGHT HOLDER: fedex authors
+    COPYRIGHT HOLDER: firex authors

@@ -1,0 +1,145 @@
+# Discovering Available Layers
+
+This vignette shows how to inspect the Wildfire Resilience Index (WRI)
+catalog before downloading data. Users start by listing available
+layers, then narrow the catalog to the layer ID they need. Catalog
+browsing reads the local STAC index bundled with the package, so this
+step does not require a large data download.
+
+## Setup
+
+Load firex. No other packages are needed for catalog browsing.
+
+``` r
+
+library(firex)
+```
+
+## Browsing the Full Catalog
+
+[`wri_overview()`](https://ignitr-package.github.io/firex/reference/wri_overview.md)
+reads the local STAC index and prints a structured summary of all 82
+available layers. Call it with no arguments to see all domains,
+dimensions, and data types at a glance:
+
+``` r
+
+wri_overview()
+```
+
+``` text
+WRI DATA SUMMARY
+-------------------
+Read at:      2026-05-11 16:07:50
+
+Layer ID Naming Convention: wri_domain + wri_dimension + data_type
+
+Collections (1): wri_ignitR
+
+Unique wri_domain values (11): air_quality, communities, iconic_places,
+iconic_species, infrastructure, livelihoods, natural_habitats,
+sense_of_place, species, unknown, water
+
+Unique data_type values (3): aggregate, final_score, indicator
+
+Unique wri_dimension values (5): domain_score, recovery, resilience,
+resistance, status
+
+Total layers available: 82
+```
+
+The object summarizes the 82 available layers grouped by domain,
+dimension, and data type.
+
+## Getting the Catalog as a Data Frame
+
+[`wri_overview_df()`](https://ignitr-package.github.io/firex/reference/wri_overview_df.md)
+returns the same information as a flat data frame, one row per layer.
+This is useful for filtering with standard R tools:
+
+``` r
+
+df <- wri_overview_df()
+nrow(df)
+#> [1] 82
+
+# Filter to water-domain aggregate layers
+subset(
+  df,
+  wri_domain == "water" & data_type == "aggregate",
+  select = c(id, wri_dimension, data_type)
+)
+#>                    id wri_dimension data_type
+#> 75 water_domain_score  domain_score aggregate
+#> 76   water_resilience    resilience aggregate
+#> 77   water_resistance    resistance aggregate
+#> 80       water_status        status aggregate
+```
+
+The ten named WRI domains are `air_quality`, `communities`,
+`iconic_places`, `iconic_species`, `infrastructure`, `livelihoods`,
+`natural_habitats`, `sense_of_place`, `species`, and `water`. The
+`unknown` domain is used for the overall `WRI_score` layer. The five WRI
+dimension values are `domain_score`, `recovery`, `resilience`,
+`resistance`, and `status`.
+
+## Inspecting a Single Layer
+
+Once you have identified a layer ID,
+[`layer_info()`](https://ignitr-package.github.io/firex/reference/layer_info.md)
+retrieves its full metadata record, including the hosted COG URL,
+geographic extent, CRS, and classification properties. Transposing with
+[`t()`](https://rspatial.github.io/terra/reference/transpose.html) makes
+it easier to read:
+
+``` r
+
+t(layer_info("WRI_score"))
+#>            WRI_score
+#> id         WRI_score
+#> collection wri_ignitR
+#> asset_href https://knb.ecoinformatics.org/.../WRI_score.tif
+#> proj_code  EPSG:5070
+#> data_type  final_score
+#> wri_domain unknown
+#> is_hosted  TRUE
+#> xmin       -146.2082
+#> ymin        19.1074
+#> xmax        173.7109
+#> ymax         54.8056
+```
+
+The `asset_href` field is the direct URL to the hosted COG file on KNB.
+[`get_layer()`](https://ignitr-package.github.io/firex/reference/get_layer.md)
+uses this URL to open a virtual connection via GDAL; you do not need to
+use it directly. The `xmin`, `ymin`, `xmax`, and `ymax` fields give the
+layer’s geographic extent in WGS84 (EPSG:4326).
+
+## Advanced: Querying STAC Items Directly
+
+For filtering on combinations of properties not easily expressed as data
+frame queries,
+[`query_stac_flexible()`](https://ignitr-package.github.io/firex/reference/query_stac_flexible.md)
+filters the underlying STAC item list by any property value:
+
+``` r
+
+catalog <- wri_overview()
+items <- lapply(catalog$data$items, function(x) x$item)
+
+# All resistance indicators in the water domain
+water_resist <- query_stac_flexible(
+  items,
+  wri_domain = "water",
+  wri_dimension = "resistance",
+  data_type = "indicator"
+)
+
+vapply(water_resist, function(x) x$id, character(1))
+#> [1] "water_resistance_drought_plans"
+#> [2] "water_resistance_water_treatment"
+```
+
+Once users identify a layer ID, they can pass that ID to
+[`get_layer()`](https://ignitr-package.github.io/firex/reference/get_layer.md)
+or use an existing spatial object as the area of interest.

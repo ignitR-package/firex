@@ -67,6 +67,11 @@ Full documentation and vignettes: https://ignitr-package.github.io/firex/
 
 The WWRI dataset is produced by NCEAS and funded by the Gordon and Betty Moore Foundation. The COG archive is hosted on KNB at https://knb.ecoinformatics.org/data/wri-data-processing/cogs/. A persistent DOI will be assigned following formal publication of the underlying dataset.
 
+## Tests
+<!-- badges: start -->
+[![R-CMD-check](https://github.com/ignitR-package/firex/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/ignitR-package/firex/actions/workflows/R-CMD-check.yaml)
+<!-- badges: end -->
+
 ## Authors
 
 Ixel Medrano, Emily Miller, Hylaea Miller, Kaiju Morquecho  

@@ -11,3 +11,5 @@
 
 ^.vscode\.*
 
+^\.positai$
+^\.claude$

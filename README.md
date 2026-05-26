@@ -2,7 +2,8 @@
 
 Access the Western Wildfire Resilience Index from R without downloading the full dataset.
 
-firex connects to 82 wildfire resilience raster layers hosted as Cloud-Optimized GeoTIFFs (COGs) on the Knowledge Network for Biocomplexity (KNB). Users can browse the catalog, inspect layer metadata, and retrieve spatial subsets by bounding box or polygon boundary — no local storage of the full archive (~25 GB) required.
+firex connects to 82 wildfire resilience raster layers hosted as Cloud-Optimized GeoTIFFs (COGs) on the Knowledge Network for Biocomplexity (KNB). Users can browse the catalog, inspect layer metadata, and retrieve spatial subsets by bounding box or polygon boundary — no local storage of the full archive (~30 GB) required.
+
 
 ## Installation
 
@@ -23,7 +24,7 @@ wri_overview()
 # Get metadata for a specific layer
 layer_info("WRI_score")
 
-# Retrieve the WRI composite score for Santa Barbara County, CA
+# Get WRI composite score for Santa Barbara County, CA
 wri <- get_layer("WRI_score",
                   aoi     = c(-120.7, 34.4, -119.4, 35.1),
                   aoi_crs = "EPSG:4326")
@@ -35,12 +36,22 @@ plot(wri, col = hcl.colors(100, "YlOrRd", rev = TRUE))
 
 | Function | Description |
 |---|---|
-| `wri_overview()` | Print a structured summary of all 82 layers |
-| `wri_overview_df()` | Return the catalog as a data frame for filtering |
-| `layer_info(id)` | Retrieve full metadata for a single layer |
-| `get_layer(id, aoi, aoi_crs)` | Download a spatial subset of a layer |
+| `wri_overview()`| Browse the complete WRI catalog as a formatted summary. Returns a structured list of all 82 available wildfire resilience layers with metadata. |
+| `wri_overview_df()` | Access the WRI catalog as a flattened data frame. Useful for filtering and programmatically searching available layers by their properties. |
+| `layer_info(id)` | Retrieve detailed metadata for a specific layer by its ID. Returns a data frame with all available information including spatial extent, data type, and asset details. |
+| `get_layer(id, aoi, aoi_crs)` | Download a WRI raster layer, optionally cropped to your area of interest. Returns a `terra::SpatRaster` object ready for analysis. |
+| `query_stac_flexible(items, ...)` | Advanced: Filter STAC catalog items by any property combination. Use this for custom queries beyond the standard catalog browsing functions. |
 
 `get_layer()` accepts numeric bounding boxes, shapefile or GeoJSON file paths, `sf` objects, `SpatVector`, `SpatRaster`, and `SpatExtent` as `aoi`. For inputs without an embedded CRS (numeric vectors and `SpatExtent`), supply `aoi_crs`.
+
+## Common Gotchas
+
+**Q: I got an error saying the layer doesn't exist**  
+A: Not all 82 layers have been deployed to KNB yet. Use `wri_overview()` to check which layers are currently available.
+
+**Q: My coordinates returned empty results**  
+A: Check your coordinate order (lon, lat for EPSG:4326) and bounding box format: `c(xmin, ymin, xmax, ymax)`
+
 
 ## Repository structure
 
@@ -63,7 +74,12 @@ firex/
 
 Full documentation and vignettes: https://ignitr-package.github.io/firex/
 
-## Data
+For function reference and examples, visit the [Reference](https://ignitr-package.github.io/firex/reference/) section.
+
+## Project Details
+
+- Data Source : National Center of Ecological Analysis Synthesis (NCEAS) produced the Wilfire Resiliance Index dataset, funded by the Gordon and Betty Moore Foundation
+- Repositry:
 
 The WWRI dataset is produced by NCEAS and funded by the Gordon and Betty Moore Foundation. The COG archive is hosted on KNB at https://knb.ecoinformatics.org/data/wri-data-processing/cogs/. A persistent DOI will be assigned following formal publication of the underlying dataset.
 

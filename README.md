@@ -1,4 +1,4 @@
-# `firex` R Package
+# firex <a href="https://ignitr-package.github.io/firex/"><img src="man/figures/logo.png" align="right" height="139" alt="firex website" /></a>
 
 Access the Western Wildfire Resilience Index from R without downloading the full dataset.
 

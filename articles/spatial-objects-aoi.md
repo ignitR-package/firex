@@ -97,8 +97,7 @@ wri_ext <- get_layer(
 ![Figure 5. Polygon-based area-of-interest input. Left: the Eaton Fire
 perimeter and the bounding extent derived from that geometry. Right:
 get_layer() retrieves the WRI_score raster over that extent, with the
-original perimeter overlaid for
-context.](../inst/figures/fig5_spatial_aoi_extent.png)
+original perimeter overlaid for context.](fig5_spatial_aoi_extent.png)
 
 Figure 5. Polygon-based area-of-interest input. Left: the Eaton Fire
 perimeter and the bounding extent derived from that geometry. Right:

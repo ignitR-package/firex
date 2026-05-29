@@ -91,7 +91,7 @@ sapply(water_layers, terra::dim)
 ![Figure 6. Four aggregate water-domain layers retrieved for Santa
 Barbara County, CA using the same bounding box and iterated with
 lapply(). Each panel is a SpatRaster in EPSG:5070; colour scales differ
-by layer.](../inst/figures/fig6_water_domains.png)
+by layer.](fig6_water_domains.png)
 
 Figure 6. Four aggregate water-domain layers retrieved for Santa Barbara
 County, CA using the same bounding box and iterated with lapply(). Each

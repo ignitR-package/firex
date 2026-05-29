@@ -1,4 +1,4 @@
-# `firex` R Package
+# firex
 
 Access the Western Wildfire Resilience Index from R without downloading
 the full dataset.

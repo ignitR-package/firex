@@ -50,7 +50,7 @@ plot(
 
 ![Figure 4. WRI score for a bounding box over Santa Barbara County, CA,
 returned by get_layer(). Darker red values indicate higher WRI score
-values.](../inst/figures/fig4_wri_score_bbox.png)
+values.](fig4_wri_score_bbox.png)
 
 Figure 4. WRI score for a bounding box over Santa Barbara County, CA,
 returned by get_layer(). Darker red values indicate higher WRI score

@@ -14,3 +14,5 @@ R/get_layer.R
 docs
 integration_milestones.md
 kaiju_tests.qmd
+demo_output/
+inst/demos/demo_output/wri_extract_size_cache/

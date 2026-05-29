@@ -6,12 +6,9 @@ format: html
 # firex Package Demo
 
 This document demonstrates the core capabilities of the `firex` package:
-browsing available WRI Aqueduct layers, retrieving raster data, and the
-range of spatial input types that `get_layer()` accepts. It also shows how
-the package handles common CRS problems with clear error messages.
+browsing available WRI Aqueduct layers, retrieving raster data, and the range of spatial input types that `get_layer()` accepts. It also shows how the package handles common CRS problems with clear error messages.
 
-Chunks can be run individually. The setup chunk below must be run first to
-load packages and prepare the demo data objects.
+Chunks can be run individually. The setup chunk below must be run first to load packages and prepare the demo data objects.
 
 ## Data Sources
 
@@ -52,8 +49,7 @@ eaton_ext  <- terra::ext(eaton_vect)                 # SpatExtent (no CRS attach
 
 ## Part 1: Browse the Catalog
 
-Use `wri_overview()` to see what layers are available, and `wri_overview_df()`
-to get that information as a data frame you can filter.
+Use `wri_overview()` to see what layers are available, and `wri_overview_df()` to get that information as a data frame you can filter.
 
 ```{r overview}
 catalog    <- wri_overview()
@@ -91,8 +87,7 @@ Use `layer_info()` to inspect the full metadata for a single layer:
 t(layer_info("water_status_surface_water_quantity"))
 ```
 
-Use `query_stac_flexible()` to filter the underlying STAC items directly by
-any property value:
+Use `query_stac_flexible()` to filter the underlying STAC items directly by any property value:
 
 ```{r query-stac}
 stac_items <- lapply(catalog$data$items, function(x) x$item)
@@ -108,10 +103,7 @@ vapply(water_items, function(x) x$id, character(1))
 
 ## Part 2: Retrieve Data with `get_layer()`
 
-`get_layer(id, aoi, aoi_crs)` streams a hosted raster layer and optionally
-crops it to a spatial area of interest (`aoi`). The `aoi_crs` argument tells
-the function what coordinate reference system your `aoi` is in -- more on
-that below.
+`get_layer(id, aoi, aoi_crs)` streams a hosted raster layer and optionally crops it to a spatial area of interest (`aoi`). The `aoi_crs` argument tells the function what coordinate reference system your `aoi` is in (more on that below).
 
 The function returns a `SpatRaster` (from the `terra` package).
 
@@ -122,22 +114,21 @@ Omit `aoi` to retrieve the full global extent of a layer. Plotting the full WRI_
 ```{r get-full}
 wri_full <- get_layer("WRI_score")
 
+dir.create("demo_output", showWarnings = FALSE)
+png("demo_output/wri_score_full.png", width = 1200, height = 900, res = 150)
 system.time({
   plot(wri_full,
-     main = "WRI Score - Full Extent",
-     col  = hcl.colors(100, "YlOrRd", rev = TRUE))
+       main = "WRI Score - Full Extent",
+       col  = hcl.colors(100, "YlOrRd", rev = TRUE))
 })['elapsed']
+dev.off()
 ```
 
 ---
 
 ### AOI type 1: numeric bounding box
 
-Pass a vector `c(xmin, ymin, xmax, ymax)` as the `aoi`. You must also supply
-`aoi_crs` to tell the function what coordinate system those numbers are in. The
-returned object keeps a lazy window on the remote COG, so the call itself is
-usually fast and the real read happens when you plot, extract values, or write
-the raster.
+Pass a vector `c(xmin, ymin, xmax, ymax)` as the `aoi`. You must also supply `aoi_crs` to tell the function what coordinate system those numbers are in. The returned object keeps a lazy window on the remote COG, so the call itself is usually fast and the real read happens when you plot, extract values, or write the raster.
 
 ```{r get-bbox}
 wri_norcal <- get_layer("WRI_score",
@@ -156,8 +147,7 @@ system.time({
 
 ### AOI type 2: shapefile path
 
-Pass a file path to a `.shp` file. The CRS is read from the `.prj` sidecar
-file, so `aoi_crs` is not needed.
+Pass a file path to a `.shp` file. The CRS is read from the `.prj` sidecar file, so `aoi_crs` is not needed.
 
 ```{r get-shp}
 # Source: LA County Open Data - Eaton Fire Perimeter
@@ -212,8 +202,7 @@ plot(terra::project(terra::vect(eaton_sf), terra::crs(wri_sf)),
 
 ### AOI type 5: SpatVector
 
-Pass a `terra` SpatVector. The CRS is embedded in the object. This example
-also shows using a different layer ID.
+Pass a `terra` SpatVector. The CRS is embedded in the object. This example also shows using a different layer ID.
 
 ```{r get-spatvector}
 # eaton_vect was loaded in setup via terra::vect()
@@ -231,8 +220,7 @@ plot(terra::project(eaton_vect, terra::crs(water_qty)),
 
 ### AOI type 6: SpatExtent
 
-`terra::ext()` returns a `SpatExtent` -- a plain bounding box with no CRS
-attached. You must supply `aoi_crs` explicitly.
+`terra::ext()` returns a `SpatExtent` -- a plain bounding box with no CRS attached. You must supply `aoi_crs` explicitly.
 
 ```{r get-spatextent}
 # eaton_ext was created in setup via terra::ext(eaton_vect)
@@ -254,13 +242,11 @@ plot(terra::project(terra::vect(eaton_ext, crs = eaton_crs), terra::crs(wri_ext)
 
 `get_layer()` validates the AOI before making any network request. The
 examples below show what happens when the CRS information is missing,
-conflicting, or incorrect. All calls are wrapped in `tryCatch` so they print
-the error message without stopping the script.
+conflicting, or incorrect. All calls are wrapped in `tryCatch` so they print the error message without stopping the script.
 
 ### Missing CRS: numeric bbox without `aoi_crs`
 
-When you pass a numeric vector as the AOI, `aoi_crs` is required. Without it
-the function has no way to know what coordinate system the numbers refer to.
+When you pass a numeric vector as the AOI, `aoi_crs` is required. Without it the function has no way to know what coordinate system the numbers refer to.
 
 ```{r error-no-crs}
 tryCatch(
@@ -286,8 +272,7 @@ tryCatch(
 
 ### Conflicting CRS: `aoi_crs` supplied when the object already has one
 
-When you pass an `sf` object or `SpatVector`, the CRS is already embedded.
-Supplying `aoi_crs` as well is ambiguous, so the function rejects it.
+When you pass an `sf` object or `SpatVector`, the CRS is already embedded. Supplying `aoi_crs` as well is ambiguous, so the function rejects it.
 
 ```{r error-crs-conflict}
 tryCatch(
@@ -314,9 +299,7 @@ tryCatch(
 
 ### Warning: AOI partially overlaps the layer extent
 
-If the AOI extends beyond the edge of the layer, `get_layer()` issues a
-warning naming which sides overflow, then intersects the request with the
-available area and returns the result normally.
+If the AOI extends beyond the edge of the layer, `get_layer()` issues a warning naming which sides overflow, then intersects the request with the available area and returns the result normally.
 
 ```{r warn-partial-overlap, warning=TRUE}
 # This bbox covers most of the contiguous US, requires crop so does not load lazily, ~35 seconds again
@@ -341,6 +324,340 @@ tryCatch(
              aoi_crs = "EPSG:4326"),
   error = function(e) message("Error: ", conditionMessage(e))
 )
+```
+
+---
+
+## Part 4: Compare All-Layer Extract Sizes
+
+This section measures how large the full set of hosted WRI raster layers would be for several extraction regions. The first three regions use WGS84 bounding boxes. The full-layer case uses the same default behavior as `get_layer()` with no `aoi`: it records the hosted COG file size from the remote headers instead of rewriting every full raster locally.
+
+The chunk is not evaluated automatically because it opens every hosted WRI layer for every region and writes many raster extracts. Run it after the setup chunk when you want to generate the CSV summaries and bar graph.
+
+```{r wri-extract-size-comparison, eval=FALSE}
+# Bounding boxes are c(xmin, ymin, xmax, ymax) in EPSG:4326.
+# Adjust the Southern California bbox if your analysis uses a different boundary.
+wri_size_regions <- list(
+  "Santa Barbara County" = list(
+    aoi = c(-120.7, 34.4, -119.4, 35.1),
+    aoi_crs = "EPSG:4326"
+  ),
+  "Southern California" = list(
+    aoi = c(-121.0, 32.4, -114.0, 36.0),
+    aoi_crs = "EPSG:4326"
+  ),
+  "California" = list(
+    aoi = c(-124.6, 32.4, -114.0, 42.1),
+    aoi_crs = "EPSG:4326"
+  ),
+  "Full layer extent" = list(
+    aoi = NULL,
+    aoi_crs = NULL
+  )
+)
+
+demo_dir <- if (dir.exists(file.path("inst", "demos"))) {
+  file.path("inst", "demos")
+} else {
+  "."
+}
+demo_output_dir <- file.path(demo_dir, "demo_output")
+extract_cache_dir <- file.path(demo_output_dir, "wri_extract_size_cache")
+detail_csv <- file.path(demo_output_dir, "wri_extract_file_sizes.csv")
+totals_csv <- file.path(demo_output_dir, "wri_extract_size_totals.csv")
+plot_path <- file.path(demo_output_dir, "wri_extract_size_totals.png")
+wri_score_plot_dir <- file.path(demo_output_dir, "wri_score_region_plots")
+
+dir.create(extract_cache_dir, recursive = TRUE, showWarnings = FALSE)
+dir.create(wri_score_plot_dir, recursive = TRUE, showWarnings = FALSE)
+Sys.setenv(
+  GDAL_DISABLE_READDIR_ON_OPEN = "EMPTY_DIR",
+  CPL_VSIL_CURL_ALLOWED_EXTENSIONS = ".tif"
+)
+
+safe_name <- function(x) {
+  gsub("[^A-Za-z0-9_-]+", "_", x)
+}
+
+remote_file_size <- function(url) {
+  headers <- tryCatch(
+    curlGetHeaders(url, redirect = TRUE),
+    error = function(e) character()
+  )
+
+  content_length <- grep(
+    "^content-length:",
+    headers,
+    value = TRUE,
+    ignore.case = TRUE
+  )
+
+  if (length(content_length) == 0L) {
+    return(NA_real_)
+  }
+
+  as.numeric(sub("^[^:]+:\\s*", "", tail(content_length, 1L)))
+}
+
+measure_one_extract <- function(layer_id, href, region_name, region) {
+  if (is.null(region$aoi)) {
+    bytes <- remote_file_size(href)
+
+    return(data.frame(
+      region = region_name,
+      id = layer_id,
+      file_path = href,
+      bytes = bytes,
+      error = if (is.na(bytes)) "Could not read Content-Length header" else NA_character_,
+      stringsAsFactors = FALSE
+    ))
+  }
+
+  region_dir <- file.path(extract_cache_dir, safe_name(region_name))
+  out_path <- file.path(region_dir, paste0(layer_id, ".tif"))
+  dir.create(region_dir, recursive = TRUE, showWarnings = FALSE)
+
+  if (!file.exists(out_path)) {
+    raster <- get_layer(
+      layer_id,
+      aoi = region$aoi,
+      aoi_crs = region$aoi_crs
+    )
+
+    terra::writeRaster(
+      raster,
+      out_path,
+      overwrite = TRUE,
+      gdal = c("COMPRESS=DEFLATE", "TILED=YES", "BIGTIFF=IF_SAFER")
+    )
+  }
+
+  data.frame(
+    region = region_name,
+    id = layer_id,
+    file_path = out_path,
+    bytes = file.info(out_path)$size,
+    error = NA_character_,
+    stringsAsFactors = FALSE
+  )
+}
+
+save_wri_score_plot <- function(region_name, region) {
+  out_path <- file.path(
+    wri_score_plot_dir,
+    paste0("wri_score_", safe_name(region_name), ".png")
+  )
+
+  if (file.exists(out_path)) {
+    return(out_path)
+  }
+
+  if (is.null(region$aoi)) {
+    existing_full_plot <- file.path(demo_output_dir, "wri_score_full.png")
+
+    if (file.exists(existing_full_plot)) {
+      file.copy(existing_full_plot, out_path, overwrite = TRUE)
+      return(out_path)
+    }
+
+    wri_score <- get_layer("WRI_score")
+  } else {
+    target_cache_path <- file.path(
+      extract_cache_dir,
+      safe_name(region_name),
+      "WRI_score.tif"
+    )
+
+    existing_cache <- wri_extract_sizes[
+      wri_extract_sizes$region == region_name &
+        wri_extract_sizes$id == "WRI_score" &
+        is.na(wri_extract_sizes$error) &
+        !is.na(wri_extract_sizes$bytes),
+      "file_path"
+    ]
+    existing_cache <- existing_cache[file.exists(existing_cache)]
+
+    if (length(existing_cache) > 0L) {
+      wri_score <- terra::rast(existing_cache[1])
+    } else {
+      wri_score <- get_layer(
+        "WRI_score",
+        aoi = region$aoi,
+        aoi_crs = region$aoi_crs
+      )
+
+      dir.create(dirname(target_cache_path), recursive = TRUE, showWarnings = FALSE)
+      terra::writeRaster(
+        wri_score,
+        target_cache_path,
+        overwrite = TRUE,
+        gdal = c("COMPRESS=DEFLATE", "TILED=YES", "BIGTIFF=IF_SAFER")
+      )
+    }
+  }
+
+  png(out_path, width = 1200, height = 900, res = 150)
+  on.exit(dev.off(), add = TRUE)
+  plot(
+    wri_score,
+    main = paste("WRI Score -", region_name),
+    col = hcl.colors(100, "YlOrRd", rev = TRUE)
+  )
+
+  out_path
+}
+
+wri_layers <- wri_overview_df()
+wri_layers <- subset(
+  wri_layers,
+  grepl("geotiff", asset_type, ignore.case = TRUE) &
+    tolower(as.character(is_hosted)) == "true"
+)
+wri_layers <- wri_layers[!duplicated(wri_layers$id), ]
+
+if (file.exists(detail_csv)) {
+  wri_extract_sizes <- read.csv(detail_csv, stringsAsFactors = FALSE)
+} else {
+  wri_extract_sizes <- data.frame(
+    region = character(),
+    id = character(),
+    file_path = character(),
+    bytes = numeric(),
+    error = character(),
+    stringsAsFactors = FALSE
+  )
+}
+
+for (region_name in names(wri_size_regions)) {
+  region <- wri_size_regions[[region_name]]
+
+  for (i in seq_len(nrow(wri_layers))) {
+    layer_id <- wri_layers$id[i]
+    matching_rows <- wri_extract_sizes$region == region_name &
+      wri_extract_sizes$id == layer_id
+    already_done <- matching_rows &
+      is.na(wri_extract_sizes$error) &
+      !is.na(wri_extract_sizes$bytes)
+
+    if (any(already_done)) {
+      next
+    }
+
+    message("Measuring ", region_name, " / ", layer_id)
+
+    one_result <- tryCatch(
+      measure_one_extract(
+        layer_id = layer_id,
+        href = wri_layers$asset_href[i],
+        region_name = region_name,
+        region = region
+      ),
+      error = function(e) {
+        data.frame(
+          region = region_name,
+          id = layer_id,
+          file_path = NA_character_,
+          bytes = NA_real_,
+          error = conditionMessage(e),
+          stringsAsFactors = FALSE
+        )
+      }
+    )
+
+    wri_extract_sizes <- rbind(wri_extract_sizes, one_result)
+    write.csv(wri_extract_sizes, detail_csv, row.names = FALSE)
+  }
+}
+
+complete_sizes <- subset(wri_extract_sizes, is.na(error) & !is.na(bytes))
+wri_extract_totals <- merge(
+  data.frame(region = names(wri_size_regions), stringsAsFactors = FALSE),
+  aggregate(bytes ~ region, complete_sizes, sum),
+  by = "region",
+  all.x = TRUE,
+  sort = FALSE
+)
+wri_extract_totals$gigabytes <- wri_extract_totals$bytes / 1024^3
+
+write.csv(wri_extract_totals, totals_csv, row.names = FALSE)
+
+bar_values <- wri_extract_totals$gigabytes
+bar_values_plot <- ifelse(is.na(bar_values), 0, bar_values)
+bar_labels <- c(
+  "Santa Barbara\nCounty",
+  "Southern\nCalifornia",
+  "California",
+  "Full layer\nextent"
+)
+
+png(plot_path, width = 1200, height = 800, res = 150)
+old_par <- par(mar = c(6.5, 5, 3, 1))
+bars <- barplot(
+  bar_values_plot,
+  names.arg = bar_labels,
+  ylab = "Total file size (GB)",
+  main = "Total Size of All Hosted WRI Layers by Extract Region",
+  col = c("#2C7FB8", "#41B6C4", "#A1DAB4", "#FEE08B"),
+  border = NA,
+  ylim = c(0, max(bar_values_plot, na.rm = TRUE) * 1.15),
+  las = 1
+)
+text(
+  x = bars,
+  y = bar_values_plot,
+  labels = ifelse(is.na(bar_values), "NA", format(round(bar_values, 2), nsmall = 2)),
+  pos = 3,
+  cex = 0.85
+)
+par(old_par)
+dev.off()
+
+wri_score_plot_paths <- vapply(
+  names(wri_size_regions),
+  function(region_name) {
+    message("Saving WRI_score plot for ", region_name)
+
+    tryCatch(
+      save_wri_score_plot(region_name, wri_size_regions[[region_name]]),
+      error = function(e) {
+        warning(
+          "Could not save WRI_score plot for ",
+          region_name,
+          ": ",
+          conditionMessage(e),
+          call. = FALSE
+        )
+        NA_character_
+      }
+    )
+  },
+  character(1)
+)
+
+wri_extract_totals
+```
+
+```{r wri-extract-size-plot, echo=FALSE, eval=file.exists("demo_output/wri_extract_size_totals.png") || file.exists("inst/demos/demo_output/wri_extract_size_totals.png")}
+plot_path <- if (file.exists("demo_output/wri_extract_size_totals.png")) {
+  "demo_output/wri_extract_size_totals.png"
+} else {
+  "inst/demos/demo_output/wri_extract_size_totals.png"
+}
+knitr::include_graphics(plot_path)
+```
+
+```{r wri-score-region-plots, echo=FALSE, eval=dir.exists("demo_output/wri_score_region_plots") || dir.exists("inst/demos/demo_output/wri_score_region_plots")}
+wri_score_plot_dir <- if (dir.exists("demo_output/wri_score_region_plots")) {
+  "demo_output/wri_score_region_plots"
+} else {
+  "inst/demos/demo_output/wri_score_region_plots"
+}
+wri_score_plot_files <- list.files(
+  wri_score_plot_dir,
+  pattern = "^wri_score_.*\\.png$",
+  full.names = TRUE
+)
+knitr::include_graphics(wri_score_plot_files)
 ```
 
 ---

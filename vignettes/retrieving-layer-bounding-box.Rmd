@@ -11,6 +11,10 @@ vignette: >
 knitr::opts_chunk$set(collapse = TRUE, comment = "#>", eval = FALSE)
 
 figure_path <- function(filename) {
+  if (file.exists(filename)) {
+    return(filename)
+  }
+
   source_path <- file.path("..", "inst", "figures", filename)
   if (file.exists(source_path)) {
     return(source_path)

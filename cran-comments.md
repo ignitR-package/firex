@@ -4,8 +4,8 @@ Local Windows check:
 
 0 errors | 0 warnings | 1 note
 
-- `checking for future file timestamps ... NOTE: unable to verify current time`
-  appears in the local Windows check environment and is not package-specific.
+- `checking CRAN incoming feasibility ... NOTE`
+  This is an initial CRAN submission.
 
 Update this section with the final GitHub Actions results before submission.
 

@@ -8,5 +8,6 @@
 ^\.github$
 ^integration_milestones\.md$
 ^cran-comments\.md$
+^inst/demos/demo_output$
 
 ^.vscode\.*

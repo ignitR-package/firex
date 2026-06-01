@@ -108,7 +108,7 @@ water_layers <- lapply(
 names(water_layers) <- water_ids
 
 # Inspect dimensions to confirm all layers are aligned
-sapply(water_layers, terra::dim)
+vapply(water_layers, terra::dim, integer(3))
 ```
 
 ```{r fig6, echo=FALSE, eval=TRUE, out.width="100%", fig.cap="Figure 6. Four aggregate water-domain layers retrieved for Santa Barbara County, CA using the same bounding box and iterated with lapply(). Each panel is a SpatRaster in EPSG:5070; colour scales differ by layer."}

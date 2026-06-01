@@ -25,8 +25,7 @@ Suggests:
     knitr,
     rmarkdown,
     pkgload,
-    testthat (>= 3.0.0),
-    tictoc
+    testthat (>= 3.0.0)
 VignetteBuilder: knitr
 Config/testthat/edition: 3
 Encoding: UTF-8

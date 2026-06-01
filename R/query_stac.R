@@ -13,8 +13,8 @@
 query_stac_flexible <- function(items, ...) {
   filters <- list(...)
   Filter(function(x) {
-    all(sapply(names(filters), function(prop) {
+    all(vapply(names(filters), function(prop) {
       !is.null(x$properties[[prop]]) && x$properties[[prop]] == filters[[prop]]
-    }))
+    }, logical(1)))
   }, items)
 }

@@ -20,8 +20,8 @@
 Source:
 [`inst/CITATION`](https://github.com/ignitR-package/firex/blob/main/inst/CITATION)
 
-Medrano, I. Miller, H., Morquecho, K., Miller, E. (2026). firex: Access
-Wildfire Resilience Index Data. R package version 0.0.0.9000.
+Medrano, I., Miller, H., Morquecho, K., and Miller, E. (2026). firex:
+Access Wildfire Resilience Index Data. R package version 0.1.0.
 https://github.com/ignitR-package/firex
 
     @Manual{,
@@ -30,6 +30,6 @@ https://github.com/ignitR-package/firex
       organization = {UC Santa Barbara, Bren School of Environmental Science & Management},
       program = {Master of Environmental Data Science},
       year = {2026},
-      note = {R package version 0.0.0.9000},
+      note = {R package version 0.1.0},
       url = {https://github.com/ignitR-package/firex},
     }

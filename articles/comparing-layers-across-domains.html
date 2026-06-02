@@ -144,7 +144,7 @@ IDs:</p>
 <span><span class="fu"><a href="https://rspatial.github.io/terra/reference/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">water_layers</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="va">water_ids</span></span>
 <span></span>
 <span><span class="co"># Inspect dimensions to confirm all layers are aligned</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">sapply</a></span><span class="op">(</span><span class="va">water_layers</span>, <span class="fu">terra</span><span class="fu">::</span><span class="va"><a href="https://rspatial.github.io/terra/reference/dimensions.html" class="external-link">dim</a></span><span class="op">)</span></span></code></pre></div>
+<span><span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">vapply</a></span><span class="op">(</span><span class="va">water_layers</span>, <span class="fu">terra</span><span class="fu">::</span><span class="va"><a href="https://rspatial.github.io/terra/reference/dimensions.html" class="external-link">dim</a></span>, <span class="fu"><a href="https://rdrr.io/r/base/integer.html" class="external-link">integer</a></span><span class="op">(</span><span class="fl">3</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
 <div class="figure">
 <img src="fig6_water_domains.png" class="r-plt" alt="Figure 6. Four aggregate water-domain layers retrieved for Santa Barbara County, CA using the same bounding box and iterated with lapply(). Each panel is a SpatRaster in EPSG:5070; colour scales differ by layer." width="100%"><p class="caption">
 Figure 6. Four aggregate water-domain layers retrieved for Santa Barbara

@@ -85,7 +85,7 @@ water_layers <- lapply(
 names(water_layers) <- water_ids
 
 # Inspect dimensions to confirm all layers are aligned
-sapply(water_layers, terra::dim)
+vapply(water_layers, terra::dim, integer(3))
 ```
 
 ![Figure 6. Four aggregate water-domain layers retrieved for Santa

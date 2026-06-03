@@ -17,7 +17,6 @@ Update this section with the final GitHub Actions results before submission.
   - Windows latest, R release
   - Ubuntu latest, R devel
   - Ubuntu latest, R release
-  - Ubuntu latest, R oldrel-1
 
 ## Submission notes
 

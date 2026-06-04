@@ -89,8 +89,9 @@ Index](https://www.wildfireindex.org/) site.
 Ixel Medrano, Emily Miller, Hylaea Miller, Kaiju Morquecho  
 Bren School of Environmental Science and Management, UC Santa Barbara
 
-Client: Dr. Caitlin Fong (NCEAS)  
-Advisors: Dr. Max Czapanskiy, Dr. Carmen Galaz-García
+**Client:** Dr. Caitlin Fong (NCEAS)  
+**Faculty Advisors:** Dr. Max Czapanskiy  
+**Capstone Instructor:** Dr. Carmen Galaz-García
 
 ## License
 

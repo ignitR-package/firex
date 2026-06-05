@@ -1,61 +1,180 @@
+# STAC property helpers --------------------------------------------------------
 
-# A STAC item with no properties should return NA, not crash
-test_that(".wri_prop1 returns NA when properties is NULL", {
-  expect_equal(firex:::.wri_prop1(list(properties = NULL), "key"), NA_character_)
+test_that(".wri_prop1 returns first property value or NA", {
+  expect_equal(.wri_prop1(list(properties = NULL), "missing"), NA_character_)
+  expect_equal(.wri_prop1(list(properties = list()), "missing"), NA_character_)
+  expect_equal(
+    .wri_prop1(list(properties = list(domain = c("water", "air"))), "domain"),
+    "water"
+  )
 })
 
-# Missing hrefs in STAC links should return NA, not an empty string or error
-test_that("wri_resolve_href returns NA for NULL href", {
-  expect_equal(firex:::wri_resolve_href("/base/file.json", NULL), NA_character_)
+# Href and link helpers --------------------------------------------------------
+
+test_that("wri_resolve_href handles missing, URL, and relative hrefs", {
+  base_file <- file.path(tempdir(), "catalog.json")
+
+  expect_equal(wri_resolve_href(base_file, NULL), NA_character_)
+  expect_equal(wri_resolve_href(base_file, ""), NA_character_)
+  expect_equal(
+    wri_resolve_href(base_file, "https://example.com/item.json"),
+    "https://example.com/item.json"
+  )
+  expect_equal(
+    wri_resolve_href(base_file, "/absolute/item.json"),
+    normalizePath("/absolute/item.json", winslash = "/", mustWork = FALSE)
+  )
+  expect_equal(
+    wri_resolve_href(base_file, "items/item.json"),
+    normalizePath(
+      file.path(tempdir(), "items", "item.json"),
+      winslash = "/",
+      mustWork = FALSE
+    )
+  )
 })
 
-# Empty string hrefs are treated the same as missing hrefs
-test_that("wri_resolve_href returns NA for empty href", {
-  expect_equal(firex:::wri_resolve_href("/base/file.json", ""), NA_character_)
+test_that("wri_links_by_rel filters matching links", {
+  empty <- wri_links_by_rel(list(), "item")
+  expect_equal(empty, list())
+
+  links <- list(
+    list(rel = "child", href = "collection.json"),
+    list(rel = "item", href = "item.json")
+  )
+
+  result <- wri_links_by_rel(list(links = links), "item")
+
+  expect_length(result, 1)
+  expect_equal(result[[1]]$href, "item.json")
 })
 
-# Absolute paths should be returned as is without joining to the base directory
-test_that("wri_resolve_href handles absolute path", {
-  result <- firex:::wri_resolve_href("/base/file.json", "/absolute/path.json")
-  expect_true(grepl("absolute/path.json", result))
+# Asset and item flattening ----------------------------------------------------
+
+test_that("wri_items_df returns an empty data frame for empty item lists", {
+  expect_equal(wri_items_df(list(items = list())), data.frame())
 })
 
-# A collection with no links should return an empty list, not error
-test_that("wri_links_by_rel returns empty list for empty links", {
-  expect_length(firex:::wri_links_by_rel(list(links = list()), "child"), 0)
+test_that("wri_item_assets_df handles empty and populated assets", {
+  empty <- wri_item_assets_df(list(), "item.json")
+
+  expect_s3_class(empty, "data.frame")
+  expect_equal(nrow(empty), 0)
+  expect_named(empty, c("asset_name", "href", "type", "roles"))
+
+  item <- list(
+    assets = list(
+      cog = list(
+        href = "rasters/layer.tif",
+        type = "image/tiff; application=geotiff",
+        roles = c("data")
+      ),
+      metadata = list(href = "metadata.json")
+    )
+  )
+
+  result <- wri_item_assets_df(item, file.path(tempdir(), "item.json"))
+
+  expect_equal(result$asset_name, c("cog", "metadata"))
+  expect_match(result$href[1], "rasters/layer.tif", fixed = TRUE)
+  expect_equal(result$type[1], "image/tiff; application=geotiff")
+  expect_equal(result$type[2], NA_character_)
+  expect_equal(result$roles[[1]], "data")
+  expect_equal(result$roles[[2]], character())
 })
 
-# A STAC object with no links field should return an empty list, not error
-test_that("wri_links_by_rel returns empty list for NULL links", {
-  expect_length(firex:::wri_links_by_rel(list(links = NULL), "child"), 0)
-})
-
-# A STAC item with no assets should return an empty data frame, not error
-test_that("wri_item_assets_df returns empty data frame for NULL assets", {
-  result <- firex:::wri_item_assets_df(list(assets = NULL), "/item.json")
-  expect_s3_class(result, "data.frame")
-  expect_equal(nrow(result), 0)
-})
-
-# An empty data frame input should pass through without error
-test_that(".wri_pick_raster_asset returns input for empty df", {
-  df <- data.frame(asset_type = character(), stringsAsFactors = FALSE)
-  expect_equal(nrow(firex:::.wri_pick_raster_asset(df)), 0)
-})
-
-# A layer with only non-raster assets should return no rows
-test_that(".wri_pick_raster_asset returns empty df when no geotiff found", {
-  df <- data.frame(
-    asset_type = "image/png",
-    is_hosted  = "true",
+test_that("wri_items_df handles layers without assets", {
+  empty_assets <- data.frame(
+    asset_name = character(),
+    href = character(),
+    type = character(),
+    roles = I(list()),
     stringsAsFactors = FALSE
   )
-  expect_equal(nrow(firex:::.wri_pick_raster_asset(df)), 0)
+
+  data <- list(
+    items = list(
+      layer = list(
+        id = "layer",
+        collection = "wri",
+        item_path = "items/layer.json",
+        item = list(
+          bbox = c(-1, -2, 3, 4),
+          properties = list(
+            datetime = "2026-01-01",
+            `proj:code` = "EPSG:5070",
+            data_type = "status",
+            wri_domain = "water",
+            wri_dimension = "status",
+            is_hosted = TRUE
+          )
+        ),
+        assets = empty_assets
+      )
+    )
+  )
+
+  result <- wri_items_df(data)
+
+  expect_equal(nrow(result), 1)
+  expect_equal(result$id, "layer")
+  expect_equal(result$asset_href, NA_character_)
+  expect_equal(result$xmin, -1)
+  expect_equal(result$ymax, 4)
+  expect_equal(result$wri_domain, "water")
 })
 
-# An empty items list should return an empty data frame, not error
-test_that("wri_items_df returns empty data frame for empty items", {
-  result <- firex:::wri_items_df(list(items = list()))
-  expect_s3_class(result, "data.frame")
-  expect_equal(nrow(result), 0)
+test_that(".wri_pick_raster_asset prefers hosted GeoTIFF rows", {
+  rows <- rbind(
+    fake_layer_row(id = "layer", is_hosted = "FALSE"),
+    fake_layer_row(id = "layer", is_hosted = "TRUE")
+  )
+
+  result <- .wri_pick_raster_asset(rows)
+
+  expect_equal(nrow(result), 1)
+  expect_equal(result$is_hosted, "TRUE")
+
+  no_rasters <- fake_layer_row(asset_type = "application/json")
+  expect_equal(nrow(.wri_pick_raster_asset(no_rasters)), 0)
+  expect_null(.wri_pick_raster_asset(NULL))
+})
+
+# .wri_prop1 — empty value in properties list returns NA
+test_that(".wri_prop1 returns NA for empty value", {
+  expect_equal(.wri_prop1(list(properties = list(wri_domain = list())), "wri_domain"), NA_character_)
+})
+
+# wri_links_by_rel — no matching rel returns empty list
+test_that("wri_links_by_rel returns empty list for unmatched rel", {
+  links <- list(links = list(list(rel = "child", href = "a.json")))
+  expect_length(wri_links_by_rel(links, "item"), 0)
+})
+
+# wri_item_assets_df — asset with no href returns NA
+test_that("wri_item_assets_df handles asset with no href", {
+  item <- list(assets = list(
+    cog = list(type = "image/tiff; application=geotiff", roles = list("data"))
+  ))
+  result <- wri_item_assets_df(item, "/item.json")
+  expect_equal(result$href, NA_character_)
+})
+
+# wri_items_df — item with NULL bbox returns NA coordinates
+test_that("wri_items_df handles item with NULL bbox", {
+  data <- list(items = list(layer = list(
+    id = "layer", collection = "wri", item_path = "items/layer.json",
+    item = list(bbox = NULL, properties = list(wri_domain = "water")),
+    assets = data.frame(asset_name = character(), href = character(),
+                        type = character(), roles = I(list()),
+                        stringsAsFactors = FALSE)
+  )))
+  result <- wri_items_df(data)
+  expect_true(is.na(result$xmin))
+  expect_true(is.na(result$ymax))
+})
+
+# .wri_pick_raster_asset — NULL input returns NULL
+test_that(".wri_pick_raster_asset returns NULL for NULL input", {
+  expect_null(.wri_pick_raster_asset(NULL))
 })

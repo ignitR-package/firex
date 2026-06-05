@@ -67,6 +67,91 @@ test_that("get_layer rejects empty string id", {
   )
 })
 
+# Mocked layer metadata branches ----------------------------------------------
+
+test_that("get_layer rejects layers without raster assets", {
+  # Mock layer_info() so the test exercises get_layer()'s asset-selection
+  # branch without reading the bundled STAC catalog or opening a remote COG.
+  testthat::local_mocked_bindings(
+    layer_info = function(layer_id) {
+      fake_layer_row(id = layer_id, asset_type = "application/json")
+    },
+    .package = "firex"
+  )
+
+  expect_error(
+    get_layer("metadata_only"),
+    "No raster asset found",
+    fixed = TRUE
+  )
+})
+
+test_that("get_layer rejects non-hosted raster assets before retrieval", {
+  # A valid GeoTIFF row that is not hosted should stop before terra::rast().
+  testthat::local_mocked_bindings(
+    layer_info = function(layer_id) {
+      fake_layer_row(id = layer_id, is_hosted = "FALSE")
+    },
+    .package = "firex"
+  )
+
+  expect_error(
+    get_layer("local_only"),
+    "not hosted",
+    fixed = TRUE
+  )
+})
+
+test_that("get_layer warns for partial AOI overlap before retrieval", {
+  # Force the AOI to extend beyond the fake layer bbox. The non-hosted flag
+  # then gives us a deterministic stopping point before any network request.
+  testthat::local_mocked_bindings(
+    layer_info = function(layer_id) {
+      fake_layer_row(
+        id = layer_id,
+        is_hosted = "FALSE",
+        bbox = c(-1, -1, 1, 1)
+      )
+    },
+    .package = "firex"
+  )
+
+  expect_warning(
+    expect_error(
+      get_layer(
+        "partial",
+        aoi = c(-2, -0.5, 0.5, 0.5),
+        aoi_crs = "EPSG:4326"
+      ),
+      "not hosted",
+      fixed = TRUE
+    ),
+    "outside the layer extent",
+    fixed = TRUE
+  )
+})
+
+test_that("get_layer reprojects non-WGS84 AOI before overlap checks", {
+  # EPSG:3857 inputs should be transformed into EPSG:4326 for bbox overlap
+  # checks. The test reaches the non-hosted branch only if reprojection works.
+  testthat::local_mocked_bindings(
+    layer_info = function(layer_id) {
+      fake_layer_row(id = layer_id, is_hosted = "FALSE")
+    },
+    .package = "firex"
+  )
+
+  expect_error(
+    get_layer(
+      "projected_aoi",
+      aoi = c(-1000, -1000, 1000, 1000),
+      aoi_crs = "EPSG:3857"
+    ),
+    "not hosted",
+    fixed = TRUE
+  )
+})
+
 
 # Remote integration tests -----------------------------------------------------
 

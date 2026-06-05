@@ -35,3 +35,12 @@ test_that("print.wri_overview handles missing collections appropriately", {
   expect_true(any(grepl("Collections: 0", output)))
 })
 
+# A malformed but collection-like object should still print a helpful message.
+test_that("print.wri_overview handles missing summaries appropriately", {
+  x <- wri_overview()
+  x$data$collections[[1]]$collection$summaries <- NULL
+
+  output <- capture.output(print(x))
+
+  expect_true(any(grepl("No collection summaries found", output)))
+})

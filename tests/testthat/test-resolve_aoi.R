@@ -65,7 +65,7 @@ test_that("resolve_aoi rejects invalid numeric bboxes", {
 
 # Common vector file paths should be read and resolved through terra::vect().
 test_that("resolve_aoi accepts shapefile and GeoJSON paths", {
-  
+
   shp <- system.file(
     "demos/data/Eaton_Perimeter_20250121.shp",
     package = "firex",
@@ -89,6 +89,17 @@ test_that("resolve_aoi accepts shapefile and GeoJSON paths", {
   expect_named(attr(geojson_result, "bbox"), c("xmin", "ymin", "xmax", "ymax"))
   expect_true(nzchar(attr(shp_result, "crs")))
   expect_true(nzchar(attr(geojson_result, "crs")))
+})
+
+# Existing files that are not spatial data should return a structured error.
+test_that("resolve_aoi rejects unreadable spatial file paths", {
+  path <- tempfile(fileext = ".txt")
+  writeLines("not spatial data", path)
+
+  result <- suppressWarnings(resolve_aoi(path))
+
+  expect_false(isTRUE(result))
+  expect_match(attr(result, "message"), "could not be read")
 })
 
 # Already-loaded terra objects should be accepted without file-path handling.

@@ -10,7 +10,9 @@
 
 - **Hylaea Miller**. Author.
 
-- **Caitlin Fong**. Maintainer.
+- **Caitlin Fong**. Contributor.
+
+- **Carlo Broderick**. Maintainer.
 
 - **National Center for Ecological Analysis and Synthesis (NCEAS)**.
   Copyright holder.

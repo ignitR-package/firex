@@ -1,12 +1,12 @@
 pandoc: 3.8.3
-pkgdown: 2.2.0
+pkgdown: 2.2.1
 pkgdown_sha: ~
 articles:
   comparing-layers-across-domains: comparing-layers-across-domains.html
   discovering-available-layers: discovering-available-layers.html
   retrieving-layer-bounding-box: retrieving-layer-bounding-box.html
   spatial-objects-aoi: spatial-objects-aoi.html
-last_built: 2026-06-05T00:35Z
+last_built: 2026-07-28T20:30Z
 urls:
   reference: https://ignitr-package.github.io/firex/reference
   article: https://ignitr-package.github.io/firex/articles

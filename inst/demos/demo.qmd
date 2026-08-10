@@ -45,6 +45,10 @@ eaton_sf   <- sf::st_read(shp_path, quiet = TRUE)   # sf object
 eaton_vect <- terra::vect(shp_path)                  # SpatVector
 eaton_crs  <- terra::crs(eaton_vect)                 # save CRS before ext() drops it
 eaton_ext  <- terra::ext(eaton_vect)                 # SpatExtent (no CRS attached)
+
+# All generated demo files go to a temporary directory by default.
+demo_output_dir <- file.path(tempdir(), "firex-demo-output")
+dir.create(demo_output_dir, recursive = TRUE, showWarnings = FALSE)
 ```
 
 ## Part 1: Browse the Catalog
@@ -114,8 +118,8 @@ Omit `aoi` to retrieve the full global extent of a layer. Plotting the full WRI_
 ```{r get-full}
 wri_full <- get_layer("WRI_score")
 
-dir.create("demo_output", showWarnings = FALSE)
-png("demo_output/wri_score_full.png", width = 1200, height = 900, res = 150)
+png(file.path(demo_output_dir, "wri_score_full.png"),
+    width = 1200, height = 900, res = 150)
 system.time({
   plot(wri_full,
        main = "WRI Score - Full Extent",
@@ -356,12 +360,7 @@ wri_size_regions <- list(
   )
 )
 
-demo_dir <- if (dir.exists(file.path("inst", "demos"))) {
-  file.path("inst", "demos")
-} else {
-  "."
-}
-demo_output_dir <- file.path(demo_dir, "demo_output")
+demo_output_dir <- file.path(tempdir(), "firex-demo-output")
 extract_cache_dir <- file.path(demo_output_dir, "wri_extract_size_cache")
 detail_csv <- file.path(demo_output_dir, "wri_extract_file_sizes.csv")
 totals_csv <- file.path(demo_output_dir, "wri_extract_size_totals.csv")
@@ -370,10 +369,6 @@ wri_score_plot_dir <- file.path(demo_output_dir, "wri_score_region_plots")
 
 dir.create(extract_cache_dir, recursive = TRUE, showWarnings = FALSE)
 dir.create(wri_score_plot_dir, recursive = TRUE, showWarnings = FALSE)
-Sys.setenv(
-  GDAL_DISABLE_READDIR_ON_OPEN = "EMPTY_DIR",
-  CPL_VSIL_CURL_ALLOWED_EXTENSIONS = ".tif"
-)
 
 safe_name <- function(x) {
   gsub("[^A-Za-z0-9_-]+", "_", x)
@@ -590,27 +585,35 @@ bar_labels <- c(
   "Full layer\nextent"
 )
 
-png(plot_path, width = 1200, height = 800, res = 150)
-old_par <- par(mar = c(6.5, 5, 3, 1))
-bars <- barplot(
-  bar_values_plot,
-  names.arg = bar_labels,
-  ylab = "Total file size (GB)",
-  main = "Total Size of All Hosted WRI Layers by Extract Region",
-  col = c("#2C7FB8", "#41B6C4", "#A1DAB4", "#FEE08B"),
-  border = NA,
-  ylim = c(0, max(bar_values_plot, na.rm = TRUE) * 1.15),
-  las = 1
-)
-text(
-  x = bars,
-  y = bar_values_plot,
-  labels = ifelse(is.na(bar_values), "NA", format(round(bar_values, 2), nsmall = 2)),
-  pos = 3,
-  cex = 0.85
-)
-par(old_par)
-dev.off()
+save_size_plot <- function(output_path) {
+  png(output_path, width = 1200, height = 800, res = 150)
+  old_par <- par(no.readonly = TRUE)
+  on.exit({
+    par(old_par)
+    dev.off()
+  }, add = TRUE)
+
+  par(mar = c(6.5, 5, 3, 1))
+  bars <- barplot(
+    bar_values_plot,
+    names.arg = bar_labels,
+    ylab = "Total file size (GB)",
+    main = "Total Size of All Hosted WRI Layers by Extract Region",
+    col = c("#2C7FB8", "#41B6C4", "#A1DAB4", "#FEE08B"),
+    border = NA,
+    ylim = c(0, max(bar_values_plot, na.rm = TRUE) * 1.15),
+    las = 1
+  )
+  text(
+    x = bars,
+    y = bar_values_plot,
+    labels = ifelse(is.na(bar_values), "NA", format(round(bar_values, 2), nsmall = 2)),
+    pos = 3,
+    cex = 0.85
+  )
+}
+
+save_size_plot(plot_path)
 
 wri_score_plot_paths <- vapply(
   names(wri_size_regions),
@@ -637,21 +640,13 @@ wri_score_plot_paths <- vapply(
 wri_extract_totals
 ```
 
-```{r wri-extract-size-plot, echo=FALSE, eval=file.exists("demo_output/wri_extract_size_totals.png") || file.exists("inst/demos/demo_output/wri_extract_size_totals.png")}
-plot_path <- if (file.exists("demo_output/wri_extract_size_totals.png")) {
-  "demo_output/wri_extract_size_totals.png"
-} else {
-  "inst/demos/demo_output/wri_extract_size_totals.png"
-}
+```{r wri-extract-size-plot, echo=FALSE, eval=file.exists(file.path(tempdir(), "firex-demo-output", "wri_extract_size_totals.png"))}
+plot_path <- file.path(tempdir(), "firex-demo-output", "wri_extract_size_totals.png")
 knitr::include_graphics(plot_path)
 ```
 
-```{r wri-score-region-plots, echo=FALSE, eval=dir.exists("demo_output/wri_score_region_plots") || dir.exists("inst/demos/demo_output/wri_score_region_plots")}
-wri_score_plot_dir <- if (dir.exists("demo_output/wri_score_region_plots")) {
-  "demo_output/wri_score_region_plots"
-} else {
-  "inst/demos/demo_output/wri_score_region_plots"
-}
+```{r wri-score-region-plots, echo=FALSE, eval=dir.exists(file.path(tempdir(), "firex-demo-output", "wri_score_region_plots"))}
+wri_score_plot_dir <- file.path(tempdir(), "firex-demo-output", "wri_score_region_plots")
 wri_score_plot_files <- list.files(
   wri_score_plot_dir,
   pattern = "^wri_score_.*\\.png$",

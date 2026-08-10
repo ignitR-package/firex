@@ -19,3 +19,15 @@
 This is an initial CRAN submission.
 
 Remote COG retrieval tests are opt-in because they depend on network access and KNB data availability. The standard test suite skips those tests unless `FIREX_RUN_REMOTE_TESTS=true`.
+
+## Resubmission
+
+This resubmission addresses the reviewer comments as follows:
+
+- Added the KNB web-service/data URL used by the package to `DESCRIPTION`.
+- Changed vignette and bundled demonstration output paths so default writes use
+  a subdirectory of `tempdir()`; figure-generation scripts accept an explicit
+  output path and otherwise write to `tempdir()`.
+- Restored graphics parameters and GDAL-related environment variables after
+  bundled demonstration and figure-generation scripts finish, including when
+  they exit with an error.

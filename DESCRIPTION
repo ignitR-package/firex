@@ -17,7 +17,8 @@ Description: Provides access to the Wildfire Resilience Index (WRI)
     the Yukon.
 License: MIT + file LICENSE
 URL: https://ignitr-package.github.io/firex/,
-    https://github.com/ignitR-package/firex
+    https://github.com/ignitR-package/firex,
+    https://knb.ecoinformatics.org/data/wri-data-processing/cogs/
 BugReports: https://github.com/ignitR-package/firex/issues
 Imports:
     terra,

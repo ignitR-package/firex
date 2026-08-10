@@ -1,34 +1,51 @@
 library(firex)
 library(terra)
 
-sb_bbox <- c(-120.7, 34.4, -119.4, 35.1)
+save_figure <- function(output_path = file.path(tempdir(), "fig6_water_domains.png")) {
+  dir.create(dirname(output_path), recursive = TRUE, showWarnings = FALSE)
 
-# Use explicit IDs so the panel order is stable.
-water_ids <- c(
-  "water_domain_score",
-  "water_resilience",
-  "water_resistance",
-  "water_status"
-)
+  sb_bbox <- c(-120.7, 34.4, -119.4, 35.1)
 
-water_layers <- lapply(
-  water_ids,
-  function(id) get_layer(id, aoi = sb_bbox, aoi_crs = "EPSG:4326")
-)
+  # Use explicit IDs so the panel order is stable.
+  water_ids <- c(
+    "water_domain_score",
+    "water_resilience",
+    "water_resistance",
+    "water_status"
+  )
 
-water_stack <- do.call(c, water_layers)
+  water_layers <- lapply(
+    water_ids,
+    function(id) get_layer(id, aoi = sb_bbox, aoi_crs = "EPSG:4326")
+  )
 
-names(water_stack) <- c(
-  "Domain score",
-  "Resilience",
-  "Resistance",
-  "Status"
-)
+  water_stack <- do.call(c, water_layers)
 
-png("inst/figures/fig6_water_domains.png", width = 1600, height = 1200, res = 150)
-plot(
-  water_stack,
-  col = hcl.colors(100, "YlOrRd", rev = TRUE),
-  zlim = c(0, 1)
-)
-dev.off()
+  names(water_stack) <- c(
+    "Domain score",
+    "Resilience",
+    "Resistance",
+    "Status"
+  )
+
+  png(output_path, width = 1600, height = 1200, res = 150)
+  old_par <- par(no.readonly = TRUE)
+  on.exit({
+    par(old_par)
+    dev.off()
+  }, add = TRUE)
+  plot(
+    water_stack,
+    col = hcl.colors(100, "YlOrRd", rev = TRUE),
+    zlim = c(0, 1)
+  )
+
+  invisible(output_path)
+}
+
+args <- commandArgs(trailingOnly = TRUE)
+if (length(args) > 1L) {
+  stop("Supply at most one output path.", call. = FALSE)
+}
+output_path <- if (length(args) == 1L) args[[1]] else file.path(tempdir(), "fig6_water_domains.png")
+message("Saved figure to: ", save_figure(output_path))

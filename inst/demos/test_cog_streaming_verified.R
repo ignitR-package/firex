@@ -18,7 +18,7 @@
 #
 # OUTPUTS:
 #   - Console output with pass/fail checks
-#   - 4 PNG visualizations saved to working directory
+#   - 4 PNG visualizations saved to a temporary directory by default
 #
 # USAGE:
 #   Rscript test_cog_streaming_verified.R
@@ -47,11 +47,42 @@ library(terra)
 library(sf)
 library(httr)
 
+run_cog_streaming_verification <- function(
+    output_dir = file.path(tempdir(), "firex-cog-streaming-outputs")) {
+
+gdal_vars <- c(
+  "GDAL_DISABLE_READDIR_ON_OPEN",
+  "CPL_VSIL_CURL_ALLOWED_EXTENSIONS"
+)
+old_gdal_env <- Sys.getenv(gdal_vars, unset = NA_character_)
+on.exit({
+  was_set <- !is.na(old_gdal_env)
+  if (any(!was_set)) {
+    Sys.unsetenv(gdal_vars[!was_set])
+  }
+  if (any(was_set)) {
+    do.call(
+      Sys.setenv,
+      as.list(stats::setNames(old_gdal_env[was_set], gdal_vars[was_set]))
+    )
+  }
+}, add = TRUE)
+
+save_png <- function(filename, width, height, code) {
+  png(filename, width = width, height = height)
+  old_par <- par(no.readonly = TRUE)
+  on.exit({
+    par(old_par)
+    dev.off()
+  }, add = TRUE)
+  force(code)
+}
+
 # --- CONFIG ---
 COG_LAYER_ID <- "WRI_score"
 COG_URL <- layer_info(COG_LAYER_ID)$asset_href[1]
 VSICURL_PATH <- paste0("/vsicurl/", COG_URL)  # GDAL virtual path for HTTP access
-OUTPUT_DIR <- file.path("inst", "demos", "test_cog_streaming_outputs")
+OUTPUT_DIR <- output_dir
 dir.create(OUTPUT_DIR, recursive = TRUE, showWarnings = FALSE)
 
 cat("Using layer:", COG_LAYER_ID, "\n")
@@ -143,10 +174,15 @@ cat("Percent of full file:", round(pct_of_full, 3), "%",
 cat("Read time:", round(t_small, 2), "s\n\n")
 
 # Visualize small subset
-png(file.path(OUTPUT_DIR, "01_small_subset.png"), width = 800, height = 600)
-plot(subset_small, main = "Test 3: Small Bbox Subset (~50km)",
-     col = hcl.colors(50, "YlOrRd", rev = TRUE))
-dev.off()
+save_png(
+  file.path(OUTPUT_DIR, "01_small_subset.png"),
+  width = 800,
+  height = 600,
+  {
+    plot(subset_small, main = "Test 3: Small Bbox Subset (~50km)",
+         col = hcl.colors(50, "YlOrRd", rev = TRUE))
+  }
+)
 cat("Saved: 01_small_subset.png\n\n")
 
 # =============================================================================
@@ -194,13 +230,18 @@ for (name in names(windows)) {
 }
 
 # Visualize scaling
-png(file.path(OUTPUT_DIR, "02_scaling_test.png"), width = 1000, height = 400)
-par(mfrow = c(1, 2))
-barplot(scaling_results$mb_read, names.arg = scaling_results$window,
-        main = "Data Read vs Window Size", ylab = "MB", col = "steelblue")
-barplot(scaling_results$seconds, names.arg = scaling_results$window,
-        main = "Read Time vs Window Size", ylab = "Seconds", col = "coral")
-dev.off()
+save_png(
+  file.path(OUTPUT_DIR, "02_scaling_test.png"),
+  width = 1000,
+  height = 400,
+  {
+    par(mfrow = c(1, 2))
+    barplot(scaling_results$mb_read, names.arg = scaling_results$window,
+            main = "Data Read vs Window Size", ylab = "MB", col = "steelblue")
+    barplot(scaling_results$seconds, names.arg = scaling_results$window,
+            main = "Read Time vs Window Size", ylab = "Seconds", col = "coral")
+  }
+)
 cat("Saved: 02_scaling_test.png\n\n")
 
 # Verify linear-ish scaling (not constant = proves partial reads)
@@ -259,11 +300,16 @@ cat("Percent of full file:", round(pct_poly, 2), "%\n")
 cat("Crop + mask time:", round(t_poly, 2), "s\n\n")
 
 # Visualize polygon clip
-png(file.path(OUTPUT_DIR, "03_polygon_clip.png"), width = 800, height = 600)
-plot(r_masked, main = "Test 5: Polygon Clip (SF Bay Area)",
-     col = hcl.colors(50, "YlOrRd", rev = TRUE))
-plot(st_geometry(poly_5070), add = TRUE, border = "blue", lwd = 2)
-dev.off()
+save_png(
+  file.path(OUTPUT_DIR, "03_polygon_clip.png"),
+  width = 800,
+  height = 600,
+  {
+    plot(r_masked, main = "Test 5: Polygon Clip (SF Bay Area)",
+         col = hcl.colors(50, "YlOrRd", rev = TRUE))
+    plot(st_geometry(poly_5070), add = TRUE, border = "blue", lwd = 2)
+  }
+)
 cat("Saved: 03_polygon_clip.png\n\n")
 
 # =============================================================================
@@ -287,10 +333,15 @@ cat("Reduction factor: 32x (", ncol(r), "->", ncol(r_overview), ")\n")
 cat("Overview time:", round(t_overview, 2), "s\n")
 cat("Note: This reads the full extent at low res - useful for quick previews\n\n")
 
-png(file.path(OUTPUT_DIR, "04_overview.png"), width = 1000, height = 600)
-plot(r_overview, main = "Test 6: Low-Resolution Overview (32x aggregation)",
-     col = hcl.colors(50, "YlOrRd", rev = TRUE))
-dev.off()
+save_png(
+  file.path(OUTPUT_DIR, "04_overview.png"),
+  width = 1000,
+  height = 600,
+  {
+    plot(r_overview, main = "Test 6: Low-Resolution Overview (32x aggregation)",
+         col = hcl.colors(50, "YlOrRd", rev = TRUE))
+  }
+)
 cat("Saved: 04_overview.png\n\n")
 
 # =============================================================================
@@ -312,3 +363,17 @@ cat("  [", ifelse(pct_of_full < 1, "PASS", "FAIL"), "] Partial reads confirmed (
 cat("  [", ifelse(scaling_results$mb_read[4] > scaling_results$mb_read[1] * 5, "PASS", "FAIL"),
     "] Read size scales with window size\n")
 cat("\nOutputs saved to:", OUTPUT_DIR, "\n")
+
+invisible(OUTPUT_DIR)
+}
+
+args <- commandArgs(trailingOnly = TRUE)
+if (length(args) > 1L) {
+  stop("Supply at most one output directory.", call. = FALSE)
+}
+output_dir <- if (length(args) == 1L) {
+  args[[1]]
+} else {
+  file.path(tempdir(), "firex-cog-streaming-outputs")
+}
+run_cog_streaming_verification(output_dir)

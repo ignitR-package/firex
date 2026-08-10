@@ -87,8 +87,7 @@ wri_get_pkg_path <- function() {
 
   stop(
     "Could not determine package path in dev mode.\n\n",
-    "Run this from the package root (folder with DESCRIPTION):\n",
-    "  setwd('~/MEDS/Capstone/firex')\n",
+    "Open the package root (folder with DESCRIPTION) as an R project, then run:\n",
     "  devtools::load_all()\n",
     call. = FALSE
   )

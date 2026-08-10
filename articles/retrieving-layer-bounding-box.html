@@ -133,8 +133,9 @@ available for analysis:</p>
 <span><span class="co">#&gt;    mean    sd  min   max</span></span>
 <span><span class="co">#&gt;   0.531 0.112 0.18 0.894</span></span>
 <span></span>
-<span><span class="co"># Write to disk as a GeoTIFF</span></span>
-<span><span class="fu"><a href="https://rspatial.github.io/terra/reference/writeRaster.html" class="external-link">writeRaster</a></span><span class="op">(</span><span class="va">wri</span>, <span class="st">"wri_score_sb.tif"</span><span class="op">)</span></span>
+<span><span class="co"># Write to a temporary location as a GeoTIFF</span></span>
+<span><span class="va">output_path</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempdir</a></span><span class="op">(</span><span class="op">)</span>, <span class="st">"wri_score_sb.tif"</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rspatial.github.io/terra/reference/writeRaster.html" class="external-link">writeRaster</a></span><span class="op">(</span><span class="va">wri</span>, <span class="va">output_path</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Reproject to WGS84 for export to other tools</span></span>
 <span><span class="va">wri_wgs84</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rspatial.github.io/terra/reference/project.html" class="external-link">project</a></span><span class="op">(</span><span class="va">wri</span>, <span class="st">"EPSG:4326"</span><span class="op">)</span></span></code></pre></div>

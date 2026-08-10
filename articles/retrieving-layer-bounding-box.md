@@ -70,8 +70,9 @@ global(wri, fun = c("mean", "sd", "min", "max"), na.rm = TRUE)
 #>    mean    sd  min   max
 #>   0.531 0.112 0.18 0.894
 
-# Write to disk as a GeoTIFF
-writeRaster(wri, "wri_score_sb.tif")
+# Write to a temporary location as a GeoTIFF
+output_path <- file.path(tempdir(), "wri_score_sb.tif")
+writeRaster(wri, output_path)
 
 # Reproject to WGS84 for export to other tools
 wri_wgs84 <- project(wri, "EPSG:4326")

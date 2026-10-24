@@ -14,7 +14,9 @@ Description: Provides access to the Wildfire Resilience Index (WRI)
     dataset through cloud-hosted data querying. Allows users to query,
     subset, and retrieve high-resolution geospatial layers measuring
     wildfire resilience across western U.S. states, British Columbia, and
-    the Yukon.
+    the Yukon. Data are retrieved from the Knowledge Network for
+    Biocomplexity web service at
+    <https://knb.ecoinformatics.org/data/wri-data-processing/cogs/>.
 License: MIT + file LICENSE
 URL: https://ignitr-package.github.io/firex/,
     https://github.com/ignitR-package/firex,
